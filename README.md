@@ -1,337 +1,461 @@
 # CodeSearch
 
-**Fast, intelligent code search and analysis for 48+ languages.**
+**Fast, intelligent code search and analysis for 48+ programming languages.**
 
 Find what you need in seconds: functions, classes, duplicates, dead code, complexity issues.
 
 [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## What Can You Search & Detect?
-
-### 🔍 **Search Capabilities**
-
-| What | Example | Use Case |
-|------|---------|----------|
-| **Functions** | `codesearch "fn authenticate" -e rs` | Find where authentication logic lives |
-| **Classes** | `codesearch "class User" -e py` | Locate data models |
-| **TODO/FIXME** | `codesearch "TODO\|FIXME" .` | Track technical debt |
-| **Imports** | `codesearch "^import" -e js` | Understand dependencies |
-| **Patterns** | `codesearch "async.*await" --fuzzy` | Find async code (handles typos) |
-| **Exact Text** | `codesearch "deprecated_function"` | Find all usages before refactoring |
-
-**Supports:** Regex, fuzzy matching, case-insensitive, multi-language (48+ languages)
-
-### 🔎 **Code Quality Detection**
-
-| What | Command | Value |
-|------|---------|-------|
-| **Dead Code** | `codesearch deadcode` | Find unused functions, variables, imports, empty functions |
-| **Duplicates** | `codesearch duplicates` | Identify copy-paste code (Type-1/2/3 clones) |
-| **Complexity** | `codesearch complexity` | Spot overly complex functions (cyclomatic/cognitive) |
-| **Circular Deps** | `codesearch circular` | Detect circular dependencies |
-
-### 💡 **Real-World Use Cases**
-
-**Before Refactoring:**
-```bash
-# Find all usages of old function
-codesearch "oldAuthMethod" .
-# Result: Found in 12 files, 23 occurrences
-```
-
-**Code Review:**
-```bash
-# Check for technical debt
-codesearch deadcode ./src
-# Result: 5 unused functions, 12 TODO comments
-```
-
-**Understanding Codebase:**
-```bash
-# Find all authentication-related code
-codesearch "auth" -e rs,py --rank
-# Result: Ranked by relevance, with line numbers
-```
-
-**Quality Check:**
-```bash
-# Find duplicated code
-codesearch duplicates --min-lines 5
-# Result: 8 duplicate blocks (90%+ similar)
-```
-
-## 🚀 Quick Start
-
-```bash
-# Simple search: codesearch <query> [path]
-codesearch "function"           # Search current directory
-codesearch "TODO" ./src         # Search specific path
-codesearch "class" ./src -e py  # Filter by extension
-
-# Fuzzy search (handles typos)
-codesearch "usrmngr" . --fuzzy
-
-# Interactive mode
-codesearch interactive
-
-# Analysis commands
-codesearch analyze              # Codebase metrics
-codesearch complexity           # Complexity scores
-codesearch metrics              # Comprehensive metrics (all-in-one)
-codesearch design-metrics       # Coupling & cohesion
-codesearch duplicates           # Find similar code
-codesearch deadcode             # Find unused code
-
-# Advanced features
-codesearch index                # Build incremental index
-codesearch watch                # Watch for file changes
-
-# Graph analysis (6 types)
-codesearch ast file.rs          # Abstract Syntax Tree
-codesearch cfg file.rs          # Control Flow Graph
-codesearch dfg file.rs          # Data Flow Graph
-codesearch callgraph .          # Call Graph
-codesearch depgraph .           # Dependency Graph
-codesearch pdg file.rs          # Program Dependency Graph
-codesearch graph-all file.rs    # All graphs
-
-# Other advanced features
-codesearch git-history "TODO"   # Search git history
-codesearch remote --github "pattern" # Search GitHub
-```
+---
 
 ## Why CodeSearch?
 
-**Fast & Precise**
-- Parallel processing using Rust and rayon
-- Exact line numbers with precise matching
-- Smart caching for repeated searches
-- Typical search: 3-50ms for codebases < 1000 files
+### **Stop Wasting Time Searching Code**
 
-**Language-Aware**
-- 48+ languages supported
-- Understands functions, classes, imports
-- Syntax-specific patterns
+**Problem:** You're working in a large codebase and need to:
+- Find where authentication logic is implemented
+- Identify all usages of a deprecated function before refactoring
+- Track down technical debt (TODOs, FIXMEs) scattered across files
+- Understand complex function relationships and dependencies
+- Find duplicated code that violates DRY principles
+- Spot overly complex functions that need refactoring
 
-**Quality Focused**
-- Detect dead code before it ships
-- Find duplicates to improve DRY
-- Measure complexity to guide refactoring
-- Analyze design quality (coupling, cohesion, instability)
+**Traditional tools fall short:**
+- `grep` is slow and doesn't understand code structure
+- IDE search is limited to single projects/languages
+- Manual code review is time-consuming and error-prone
 
-**Developer Friendly**
-- Interactive REPL mode
-- Export to CSV/Markdown
-- MCP server for AI agents
-
-**Advanced Capabilities**
-- Incremental indexing for large codebases
-- Real-time file watching
-- Git history search
-- Remote repository search (GitHub/GitLab)
-
-**Graph Analysis (6 Types)**
-- Abstract Syntax Tree (AST) - code structure
-- Control Flow Graph (CFG) - execution paths
-- Data Flow Graph (DFG) - variable dependencies
-- Call Graph - function relationships
-- Dependency Graph - module dependencies
-- Program Dependency Graph (PDG) - combined analysis
-
-**High Code Quality**
-- ✅ 100% test pass rate (173 unit + 36 integration tests)
-- ✅ Zero clippy warnings (as of Jan 2026)
-- ✅ Modular architecture (19 focused modules)
-- ✅ DRY, KISS, and SoC principles throughout
-- ✅ Thread-safe parallel processing
-- ✅ Comprehensive error handling
-
-## Installation
+**CodeSearch solves these problems:**
 
 ```bash
+# Find authentication logic instantly
+codesearch "authenticate" ./src --rank
+# Result: All authentication code, ranked by relevance
+
+# Track technical debt before sprint planning
+codesearch deadcode ./src --format csv --output debt.csv
+# Result: 15 unused functions, 23 TODOs, 8 unreachable blocks
+
+# Find duplicates before they become maintenance nightmares
+codesearch duplicates ./src
+# Result: 12 code clones (80%+ similarity)
+```
+
+### **What Makes CodeSearch Different?**
+
+| Feature | Benefit | Example |
+|---------|---------|---------|
+| **Language-Aware** | Understands functions, classes, imports in 48+ languages | Find `fn main` in Rust, `def main` in Python |
+| **Lightning Fast** | Parallel processing with Rust, typical searches in 3-50ms | Search 1000 files in < 50ms |
+| **Intelligent** | Fuzzy matching handles typos, semantic search understands context | `codesearch "authetication"` finds "authentication" |
+| **Code Quality** | Detects dead code, duplicates, complexity issues automatically | `codesearch complexity` flags functions needing refactoring |
+| **Graph Analysis** | 6 types of graphs for deep code understanding | Call graphs show function relationships |
+| **Developer-Friendly** | Interactive mode, multiple export formats, MCP for AI agents | `codesearch interactive` for REPL-style search |
+
+### **Real-World Impact**
+
+- **Save Hours per Week**: Replace manual code hunting with instant searches
+- **Ship Better Code**: Catch dead code and complexity issues before review
+- **Understand Faster**: Visualize code relationships with graph analysis
+- **Reduce Technical Debt**: Track and eliminate code quality issues systematically
+
+---
+
+## Quick Start
+
+### Installation
+
+```bash
+# Clone and build
 git clone https://github.com/yingkitw/codesearch.git
 cd codesearch
 cargo build --release
 
-# Optional: MCP server for AI agents
-cargo build --release --features mcp
+# The binary will be at: ./target/release/codesearch
+# Optional: Add to PATH
+export PATH="$PATH:$PWD/target/release"
 ```
 
-## Common Options
+### Basic Usage
 
 ```bash
-# Filter by file type
-codesearch "pattern" -e rs,py,js
+# Simple search - find anything in your codebase
+codesearch "function" ./src
 
-# Exclude directories
-codesearch "pattern" -x target,node_modules
+# Search with file type filter
+codesearch "class" ./src --extensions rs,py
 
-# Case-insensitive
-codesearch "pattern" -i
+# Fuzzy search (handles typos!)
+codesearch "calcualtor" ./src --fuzzy
 
-# Fuzzy matching (handles typos)
-codesearch "patern" --fuzzy
-
-# Rank by relevance
-codesearch "pattern" --rank
-
-# Export results
-codesearch "pattern" --export csv
-```
-
-## 📖 Usage Examples
-
-### Search Patterns
-
-```bash
-# codesearch <query> [path] [options]
-codesearch "TODO"                       # Search current directory
-codesearch "class" ./src                # Search specific folder
-codesearch "error" . -e py,js,ts        # Filter by extensions
-
-# Regex patterns
-codesearch "fn\\s+\\w+" ./src -e rs     # Rust functions
-codesearch "import.*from" . -e ts       # TypeScript imports
-
-# Fuzzy search (handles typos)
-codesearch "authetication" . --fuzzy    # Finds "authentication"
-```
-
-### Code Analysis
-
-```bash
-# Codebase overview
-codesearch analyze
-# Output: Files, lines, languages, function count, class count
-
-# Complexity analysis
-codesearch complexity --threshold 15 --sort
-# Output: Files ranked by cyclomatic/cognitive complexity
-
-# Dead code detection (enhanced with 6+ detection types)
-codesearch deadcode -e rs,py,js
-# Output: Unused variables, unreachable code, empty functions, 
-#         TODO/FIXME markers, commented code, unused imports
-
-# Duplicate detection
-codesearch duplicates --similarity 0.8
-# Output: Similar code blocks that violate DRY
-```
-
-### Interactive Mode
-
-```bash
+# Interactive mode
 codesearch interactive
 ```
 
-**Commands:**
-- Type any pattern to search
-- `/f` - Toggle fuzzy mode
-- `/i` - Toggle case insensitivity
-- `analyze` - Codebase metrics
-- `complexity` - Complexity analysis
-- `deadcode` - Dead code detection
-- `duplicates` - Find duplicates
-- `help` - All commands
+---
 
-### MCP Server (AI Integration)
+## Usage Examples
+
+### 1. **Everyday Search Tasks**
+
+#### Find Function Definitions
+```bash
+# Find all functions named "process"
+codesearch "fn process" ./src --extensions rs
+
+# Find class definitions
+codesearch "class User" ./src --extensions py
+
+# Find async functions
+codesearch --regex "async\s+fn\s+\w+" ./src --extensions rs
+```
+
+#### Track Technical Debt
+```bash
+# Find all TODOs and FIXMEs
+codesearch "TODO\|FIXME" ./src
+
+# Export to CSV for tracking
+codesearch "TODO" ./src --format csv --output todos.csv
+```
+
+#### Refactor Safely
+```bash
+# Find all usages before refactoring
+codesearch "old_function_name" ./src
+
+# Case-sensitive search for exact matches
+codesearch "MyStruct" ./src --case-sensitive
+```
+
+### 2. **Code Quality Analysis**
+
+#### Detect Dead Code
+```bash
+# Find unused code
+codesearch deadcode ./src
+
+# Output:
+# ⚠️ Found 12 potential dead code items:
+#    [var] L 10: variable 'unused_var'
+#    [∅] L 42: empty_helper()
+#    [?] L 58: TODO marker
+#    [!] L 72: unreachable code
+
+# Export for code review
+codesearch deadcode ./src --format markdown --output review.md
+```
+
+#### Analyze Complexity
+```bash
+# Find complex functions that need refactoring
+codesearch complexity ./src
+
+# Output:
+# 📊 Files by Complexity:
+#   src/auth.rs: Cyclomatic 45, Cognitive 38 (HIGH)
+#   src/parser.rs: Cyclomatic 28, Cognitive 22 (MEDIUM)
+```
+
+#### Find Code Duplicates
+```bash
+# Identify copy-pasted code
+codesearch duplicates ./src
+
+# Output:
+# 🔍 Found 8 duplicate code blocks:
+#   auth.rs:120-145 vs user.rs:89-114 (85% similar)
+```
+
+### 3. **Understanding Codebases**
+
+#### Codebase Overview
+```bash
+# Get high-level metrics
+codesearch analyze ./src
+
+# Output:
+# Overview
+#   Total files: 156
+#   Total lines: 45,230
+#   Languages: Rust (60%), Python (25%), TypeScript (15%)
+#   Functions: 892
+#   Classes: 124
+```
+
+#### Explore Function Relationships
+```bash
+# Generate call graph
+codesearch callgraph ./src --format text
+
+# Output:
+# Call Graph Analysis:
+#   Functions: 28
+#   Function calls: 156
+#   Recursive: authenticate()
+#   Dead (never called): legacy_auth()
+```
+
+#### Control Flow Analysis
+```bash
+# Understand execution paths
+codesearch cfg ./src/auth.rs --format text
+
+# Shows: Basic blocks, branches, loops, unreachable code
+```
+
+### 4. **Advanced Workflows**
+
+#### Interactive Mode
+```bash
+codesearch interactive
+
+# Commands in interactive mode:
+# authenticate       - Search for "authenticate"
+# /f                 - Toggle fuzzy matching
+# /i                 - Toggle case sensitivity
+# analyze            - Show codebase metrics
+# complexity         - Show complexity analysis
+# deadcode           - Find dead code
+# help               - Show all commands
+```
+
+#### Search with Ranking
+```bash
+# Get results ranked by relevance
+codesearch "auth" ./src --rank
+
+# Best match first:
+#   src/auth/mod.rs:10 - pub fn authenticate() { ... }
+#   src/user.rs:45     - fn check_auth() { ... }
+```
+
+#### Export Results
+```bash
+# CSV for spreadsheets
+codesearch "TODO" ./src --format csv --output todos.csv
+
+# Markdown for documentation
+codesearch analyze ./src --format markdown --output analysis.md
+
+# JSON for automation
+codesearch "function" ./src --format json | jq '.matches'
+```
+
+### 5. **Special Features**
+
+#### Search Git History
+```bash
+# Search through commit history
+codesearch git-history "TODO" ./src
+```
+
+#### Search Remote Repositories
+```bash
+# Search GitHub/GitLab without cloning
+codesearch remote --github "pattern" owner/repo
+```
+
+#### Build Index for Large Codebases
+```bash
+# Incremental indexing for faster searches
+codesearch index ./src
+
+# Watch for changes and auto-update
+codesearch watch ./src
+```
+
+---
+
+## Common Commands Reference
+
+### Search Commands
+```bash
+codesearch "<query>" [path] [options]
+
+# Options:
+--extensions, -e     # Filter by file extensions (e.g., rs,py,js)
+--case-sensitive     # Case-sensitive matching
+--fuzzy              # Fuzzy matching (handles typos)
+--regex              # Use regular expressions
+--rank               # Rank results by relevance
+--format             # Output format (text, csv, markdown, json)
+--output, -o         # Output file path
+```
+
+### Analysis Commands
+```bash
+codesearch deadcode [path]          # Find unused code
+codesearch complexity [path]        # Analyze complexity
+codesearch duplicates [path]        # Find duplicates
+codesearch analyze [path]           # Codebase metrics
+codesearch circular [path]          # Circular dependencies
+codesearch design-metrics [path]    # Coupling & cohesion
+codesearch metrics [path]           # All metrics
+```
+
+### Graph Commands
+```bash
+codesearch ast [file]               # Abstract Syntax Tree
+codesearch cfg [file]               # Control Flow Graph
+codesearch dfg [file]               # Data Flow Graph
+codesearch callgraph [path]         # Call Graph
+codesearch depgraph [path]          # Dependency Graph
+codesearch pdg [file]               # Program Dependency Graph
+codesearch graph-all [file]         # All graph types
+```
+
+### Utility Commands
+```bash
+codesearch files [path]             # List searchable files
+codesearch languages                # List supported languages
+codesearch interactive              # Interactive mode
+codesearch index [path]             # Build index
+codesearch watch [path]             # Watch for changes
+codesearch git-history <query>      # Search git history
+codesearch remote --github <query>  # Search GitHub
+```
+
+---
+
+## Real-World Examples
+
+### Example 1: Pre-Code Review Checklist
 
 ```bash
-# Start MCP server
-cargo run --features mcp -- mcp-server
+#!/bin/bash
+# review.sh - Automated code review checklist
 
-# Agents can call:
-# - search_code(query, path, extensions, fuzzy, regex)
-# - list_files(path, extensions, exclude)
-# - analyze_codebase(path, extensions)
+echo "=== Code Review Report ==="
+echo ""
+
+echo "1. Dead Code Issues:"
+codesearch deadcode ./src --format markdown
+
+echo ""
+echo "2. Complexity Issues:"
+codesearch complexity ./src --threshold 15
+
+echo ""
+echo "3. Duplicate Code:"
+codesearch duplicates ./src
+
+echo ""
+echo "4. Technical Debt:"
+codesearch "TODO\|FIXME\|HACK" ./src
 ```
 
-## 📊 Output Examples
+### Example 2: Learning a New Codebase
 
-### Search Results
-```
-🔍 Search Results for "fn main"
-──────────────────────────────
+```bash
+# Step 1: Understand the structure
+codesearch analyze ./src
 
-📁 ./src/main.rs (1 match)
-  358: fn main() -> Result<(), Box<dyn std::error::Error>> {
+# Step 2: Find entry points
+codesearch --regex "(main|Main|app\.start)" ./src
 
-📊 Statistics:
-  Files searched: 12
-  Matches found: 1
-  Time: 0.003s
-```
+# Step 3: Explore key modules
+codesearch files ./src --extensions rs | head -20
 
-### Dead Code Detection
-```
-🔍 Dead Code Detection
-──────────────────────────────
+# Step 4: Understand function relationships
+codesearch callgraph ./src --format text | head -50
 
-⚠️  Found 12 potential dead code items:
-
-📄 src/example.rs
-   [var] L  10: variable 'unused_var' - Variable declared but never used
-   [!]   L  25: unreachable - Code after return statement is unreachable
-   [∅]   L  42: empty_helper - Empty function with no implementation
-   [?]   L  58: // TODO: implement this - TODO marker - incomplete implementation
-   [imp] L  72: import 'HashMap' - Imported but never used
-
-📊 Summary:
-   • variable: 3
-   • unreachable: 2
-   • empty: 2
-   • todo: 3
-   • import: 2
+# Step 5: Find complex code to review
+codesearch complexity ./src --sort | head -10
 ```
 
-### Complexity Analysis
+### Example 3: Refactoring Workflow
+
+```bash
+# Before refactoring, find all usages
+codesearch "OldAuthService" ./src --output old_usage.txt
+
+# Check for complexity issues
+codesearch complexity ./src/auth --format markdown > complexity_report.md
+
+# Find similar code that could be consolidated
+codesearch duplicates ./src/auth --output duplicates.txt
+
+# After refactoring, verify no old code remains
+codesearch "OldAuthService" ./src
+# Should return: "No matches found"
 ```
-📊 Code Complexity Analysis
-──────────────────────────────
 
-📁 Files by Complexity (highest first):
+### Example 4: Continuous Quality Monitoring
 
-  src/search.rs
-    Cyclomatic: 45  Cognitive: 38  Lines: 645
+```bash
+# Add to CI/CD pipeline
 
-  src/analysis.rs
-    Cyclomatic: 28  Cognitive: 22  Lines: 378
+# Fail if high complexity functions detected
+complexity=$(codesearch complexity ./src --format json)
+max_cc=$(echo "$complexity" | jq '.max_complexity')
+if [ "$max_cc" -gt 20 ]; then
+    echo "❌ High complexity detected: $max_cc"
+    exit 1
+fi
+
+# Fail if new dead code introduced
+deadcode_count=$(codesearch deadcode ./src --format json | jq '.total')
+if [ "$deadcode_count" -gt 10 ]; then
+    echo "❌ Too much dead code: $deadcode_count items"
+    exit 1
+fi
+
+echo "✅ Code quality checks passed"
 ```
 
-## Code Quality & Architecture
+---
 
-### Maintainability
-- **Modular Design**: 19 focused modules following single responsibility principle
-- **Clean Code**: Average module size ~200 LOC, functions < 100 LOC
-- **Design Patterns**: Strategy, Observer, Facade patterns for extensibility
-- **Best Practices**: DRY, KISS, SoC principles consistently applied
+## Demo Project
 
-### Test Coverage
-- **173 Unit Tests**: Core functionality thoroughly tested
-- **36 Integration Tests**: End-to-end CLI command verification
-- **23 MCP Tests**: AI agent integration validated
-- **Edge Cases**: Empty files, unicode, large files, special characters
+A comprehensive example project demonstrating all CodeSearch capabilities is available in the [examples/demo-project/](examples/demo-project/) directory.
+
+**Run the demo:**
+```bash
+cd examples/demo-project
+./demo.sh
+```
+
+**Demo includes:**
+- Multi-language codebase (Rust, Python, TypeScript)
+- Intentional code quality issues for detection
+- All analysis types demonstrated
+- Real-world usage examples
+
+---
+
+## Architecture & Quality
+
+### Code Quality Standards
+- ✅ **100% test pass rate** (173 unit + 36 integration tests)
+- ✅ **Zero clippy warnings** (clean code)
+- ✅ **Modular architecture** (40+ focused modules)
+- ✅ **Thread-safe** parallel processing with rayon
+- ✅ **Comprehensive error handling**
 
 ### Performance
-- **Parallel Processing**: Auto-scales to available CPU cores with rayon
-- **Smart Caching**: 70-90% cache hit rate for repeated searches
-- **Memory Efficient**: Streaming file reading, < 100MB for 10K files
-- **Optimized**: Regex compilation moved outside loops, fast hashing with ahash
+- **Fast**: 3-50ms for typical searches (< 1000 files)
+- **Parallel**: Auto-scales to available CPU cores
+- **Smart caching**: 70-90% cache hit rate for repeated searches
+- **Memory efficient**: Streaming file reading, < 100MB for 10K files
 
-### Future Improvements
-See [TODO.md](TODO.md) for planned enhancements:
-- Trait abstractions for better testability
-- Property-based testing with proptest
-- Performance profiling and optimization
-- Enhanced caching with LRU eviction
-- Workspace crate structure for modularity
+### Supported Languages
 
-## Supported Languages
+48+ languages including: **Rust, Python, JavaScript, TypeScript, Go, Java, C/C++, Ruby, PHP, Swift, Kotlin, C#, Haskell, Elixir, Erlang, Scala, Lua, Perl, Shell, SQL, YAML, TOML, JSON,** and more.
 
-48+ languages including: Rust, Python, JavaScript, TypeScript, Go, Java, C/C++, Ruby, PHP, Swift, Kotlin, and more.
+See `codesearch languages` for the complete list.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for technical details and design principles.
+---
+
+## Additional Resources
+
+- [**Demo Project**](examples/demo-project/) - Hands-on examples
+- [**DEMO_GUIDE.md**](examples/demo-project/DEMO_GUIDE.md) - Comprehensive usage guide
+- [**ARCHITECTURE.md**](ARCHITECTURE.md) - Technical details and design
+- [**CLAUDE.md**](CLAUDE.md) - Contributor guide
+
+---
 
 ## License
 
