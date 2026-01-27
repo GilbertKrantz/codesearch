@@ -1,7 +1,4 @@
-//! Code Parser Utilities Module
-//!
-//! Provides shared utilities for parsing code files, extracting functions, and common operations.
-//! This module ensures DRY, KISS, and SOC principles.
+//! Parser utility functions for compatibility with existing modules
 
 use crate::language::get_language_by_extension;
 use regex::Regex;
@@ -47,6 +44,8 @@ pub fn extract_identifier_from_match(caps: &regex::Captures) -> Option<String> {
 }
 
 /// Extract function definitions from content using language patterns
+/// Note: This is a compatibility function that uses regex-based extraction
+/// TODO: Migrate to use native parsers
 pub fn extract_functions(
     content: &str,
     file_path: &str,
@@ -72,6 +71,8 @@ pub fn extract_functions(
 }
 
 /// Extract class/struct definitions from content using language patterns
+/// Note: This is a compatibility function that uses regex-based extraction
+/// TODO: Migrate to use native parsers
 pub fn extract_classes(
     content: &str,
     file_path: &str,
@@ -172,4 +173,3 @@ mod tests {
         assert!(!refs.contains("let"));
     }
 }
-

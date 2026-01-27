@@ -2,6 +2,7 @@
 //!
 //! Analyzes function call relationships in code.
 
+use crate::parser::{get_parser_for_extension, CodeParser};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -244,40 +245,93 @@ pub fn build_call_graph(
         })
         .collect();
 
-    let func_def_pattern = regex::Regex::new(r"(?:fn|def|function)\s+(\w+)")?;
-    let func_call_pattern = regex::Regex::new(r"(\w+)\s*\(")?;
-
     for entry in &files {
         let file_path = entry.path();
         let content = std::fs::read_to_string(file_path)?;
 
-        for (line_num, line) in content.lines().enumerate() {
-            if let Some(caps) = func_def_pattern.captures(line) {
-                if let Some(func_name) = caps.get(1) {
-                    let func_name_str = func_name.as_str().to_string();
-                    function_definitions.insert(
-                        func_name_str.clone(),
-                        (file_path.to_string_lossy().to_string(), line_num + 1),
-                    );
+        if let Some(ext) = file_path.extension().and_then(|s| s.to_str()) {
+            if let Some(parser) = get_parser_for_extension(ext) {
+                if let Ok(analysis) = parser.parse_content(&content) {
+                    for func in analysis.functions {
+                        function_definitions.insert(
+                            func.name.clone(),
+                            (file_path.to_string_lossy().to_string(), func.line),
+                        );
 
-                    let node = CallNode {
-                        function_name: func_name_str,
-                        file_path: file_path.to_string_lossy().to_string(),
-                        line: line_num + 1,
-                        is_recursive: false,
-                        call_count: 0,
-                    };
-                    graph.add_node(node);
+                        let node = CallNode {
+                            function_name: func.name,
+                            file_path: file_path.to_string_lossy().to_string(),
+                            line: func.line,
+                            is_recursive: false,
+                            call_count: 0,
+                        };
+                        graph.add_node(node);
+                    }
+                }
+            } else {
+                let func_def_pattern = regex::Regex::new(r"(?:fn|def|function|func)\s+(\w+)")?;
+                for (line_num, line) in content.lines().enumerate() {
+                    if let Some(caps) = func_def_pattern.captures(line) {
+                        if let Some(func_name) = caps.get(1) {
+                            let func_name_str = func_name.as_str().to_string();
+                            function_definitions.insert(
+                                func_name_str.clone(),
+                                (file_path.to_string_lossy().to_string(), line_num + 1),
+                            );
+
+                            let node = CallNode {
+                                function_name: func_name_str,
+                                file_path: file_path.to_string_lossy().to_string(),
+                                line: line_num + 1,
+                                is_recursive: false,
+                                call_count: 0,
+                            };
+                            graph.add_node(node);
+                        }
+                    }
                 }
             }
         }
     }
+
+    let func_call_pattern = regex::Regex::new(r"(\w+)\s*\(")?;
 
     for entry in &files {
         let file_path = entry.path();
         let content = std::fs::read_to_string(file_path)?;
         let mut current_function = None;
 
+        if let Some(ext) = file_path.extension().and_then(|s| s.to_str()) {
+            if let Some(parser) = get_parser_for_extension(ext) {
+                if let Ok(analysis) = parser.parse_content(&content) {
+                    for func in &analysis.functions {
+                        current_function = Some(func.name.clone());
+                        
+                        for (line_num, line) in content.lines().enumerate() {
+                            if line_num + 1 >= func.line {
+                                for cap in func_call_pattern.captures_iter(line) {
+                                    if let Some(callee_match) = cap.get(1) {
+                                        let callee = callee_match.as_str().to_string();
+                                        
+                                        if function_definitions.contains_key(&callee) && callee != func.name {
+                                            graph.add_edge(
+                                                func.name.clone(),
+                                                callee,
+                                                line_num + 1,
+                                                true,
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    continue;
+                }
+            }
+        }
+
+        let func_def_pattern = regex::Regex::new(r"(?:fn|def|function|func)\s+(\w+)")?;
         for (line_num, line) in content.lines().enumerate() {
             if let Some(caps) = func_def_pattern.captures(line) {
                 if let Some(func_name) = caps.get(1) {

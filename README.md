@@ -442,7 +442,14 @@ cd examples/demo-project
 
 ### Supported Languages
 
-48+ languages including: **Rust, Python, JavaScript, TypeScript, Go, Java, C/C++, Ruby, PHP, Swift, Kotlin, C#, Haskell, Elixir, Erlang, Scala, Lua, Perl, Shell, SQL, YAML, TOML, JSON,** and more.
+**Native Parsers (High Performance):**
+- **Rust** - Full AST parsing with zero-allocation tokenizer
+- **Python** - Complete syntax support including async/await
+- **JavaScript/TypeScript** - ES6+, JSX, TSX support
+- **Go** - Structs, interfaces, methods with receivers
+- **Java** - Classes, interfaces, enums, annotations
+
+**48+ Additional Languages** via regex patterns including: C/C++, Ruby, PHP, Swift, Kotlin, C#, Haskell, Elixir, Erlang, Scala, Lua, Perl, Shell, SQL, YAML, TOML, JSON, and more.
 
 See `codesearch languages` for the complete list.
 
