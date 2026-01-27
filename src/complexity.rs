@@ -23,12 +23,31 @@ pub fn analyze_complexity(
     println!();
 
     let files = list_files(path, extensions, exclude)?;
+
+    if files.is_empty() {
+        println!("{}", "No files found to analyze.".dimmed());
+        return Ok(());
+    }
+
     let mut all_metrics: Vec<ComplexityMetrics> = Vec::new();
+    let mut errors: Vec<String> = Vec::new();
 
     for file in &files {
-        if let Ok(content) = fs::read_to_string(&file.path) {
-            let metrics = calculate_file_complexity(&file.path, &content);
-            all_metrics.push(metrics);
+        match fs::read_to_string(&file.path) {
+            Ok(content) => {
+                let metrics = calculate_file_complexity(&file.path, &content);
+                all_metrics.push(metrics);
+            }
+            Err(e) => {
+                errors.push(format!("Failed to read {}: {}", file.path, e));
+            }
+        }
+    }
+
+    // Report any errors that occurred
+    if !errors.is_empty() && errors.len() < 10 {
+        for error in &errors {
+            eprintln!("{}", error.yellow());
         }
     }
 

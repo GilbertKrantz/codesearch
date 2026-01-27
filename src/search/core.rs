@@ -3,6 +3,8 @@
 //! Main search implementation with parallel processing and caching.
 
 use crate::cache::get_search_cache;
+use crate::errors::SearchError;
+use crate::fs::{WalkOptions, create_filtered_walker};
 use crate::types::{SearchMetrics, SearchOptions, SearchResult};
 use super::fuzzy::search_in_file_parallel;
 use super::semantic::enhance_query_semantically;
@@ -11,7 +13,6 @@ use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Instant;
-use walkdir::WalkDir;
 
 /// Main search function with support for fuzzy, regex, semantic, and cached searches
 pub fn search_code(
@@ -47,34 +48,40 @@ pub fn search_code(
 
     let regex = if options.fuzzy {
         if options.ignore_case {
-            Regex::new(&format!("(?i).*{}.*", regex::escape(&enhanced_query)))?
+            Regex::new(&format!("(?i).*{}.*", regex::escape(&enhanced_query)))
+                .map_err(|e| SearchError::InvalidPattern {
+                    pattern: enhanced_query.clone(),
+                    source: e,
+                })?
         } else {
-            Regex::new(&format!(".*{}.*", regex::escape(&enhanced_query)))?
+            Regex::new(&format!(".*{}.*", regex::escape(&enhanced_query)))
+                .map_err(|e| SearchError::InvalidPattern {
+                    pattern: enhanced_query.clone(),
+                    source: e,
+                })?
         }
     } else if options.ignore_case {
-        Regex::new(&format!("(?i){}", &enhanced_query))?
+        Regex::new(&format!("(?i){}", &enhanced_query))
+            .map_err(|e| SearchError::InvalidPattern {
+                pattern: enhanced_query.clone(),
+                source: e,
+            })?
     } else {
-        Regex::new(&enhanced_query)?
+        Regex::new(&enhanced_query)
+            .map_err(|e| SearchError::InvalidPattern {
+                pattern: enhanced_query.clone(),
+                source: e,
+            })?
     };
 
-    let walker = WalkDir::new(path)
-        .into_iter()
-        .filter_entry(|e| {
-            if let Some(name) = e.file_name().to_str() {
-                if let Some(ref exclude_dirs) = options.exclude {
-                    for exclude_dir in exclude_dirs {
-                        if name == exclude_dir {
-                            return false;
-                        }
-                    }
-                }
-            }
-            true
-        })
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file());
+    // Use the shared file walking utility
+    let walk_options = WalkOptions {
+        extensions: options.extensions.clone(),
+        exclude: options.exclude.clone(),
+        ..Default::default()
+    };
 
-    let files: Vec<PathBuf> = walker
+    let files: Vec<PathBuf> = create_filtered_walker(path, &walk_options)
         .filter(|entry| {
             let file_path = entry.path();
             if let Some(ref exts) = options.extensions {
@@ -155,22 +162,29 @@ pub fn list_files(
     extensions: Option<&[String]>,
     exclude: Option<&[String]>,
 ) -> Result<Vec<crate::types::FileInfo>, Box<dyn std::error::Error>> {
-    let walker = WalkDir::new(path)
-        .into_iter()
-        .filter_entry(|e| {
-            if let Some(name) = e.file_name().to_str() {
-                if let Some(exclude_dirs) = exclude {
-                    for exclude_dir in exclude_dirs {
-                        if name == exclude_dir {
-                            return false;
-                        }
-                    }
-                }
-            }
-            true
-        })
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file());
+    // Validate path exists
+    if !path.exists() {
+        return Err(SearchError::DirectoryNotFound {
+            path: path.to_path_buf(),
+        }
+        .into());
+    }
+
+    if !path.is_dir() {
+        return Err(SearchError::InvalidOptions {
+            message: format!("Path is not a directory: {}", path.display()),
+        }
+        .into());
+    }
+
+    // Use the shared file walking utility
+    let walk_options = WalkOptions {
+        extensions: extensions.map(|v| v.to_vec()),
+        exclude: exclude.map(|v| v.to_vec()),
+        ..Default::default()
+    };
+
+    let walker = create_filtered_walker(path, &walk_options);
 
     let files: Vec<crate::types::FileInfo> = walker
         .filter(|entry| {
@@ -196,7 +210,7 @@ pub fn list_files(
             };
 
             crate::types::FileInfo {
-                path: path.to_string_lossy().to_string(),
+                path: path.to_string_lossy().into_owned(),
                 size,
                 lines,
             }

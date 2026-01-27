@@ -1,0 +1,36 @@
+# Application configuration
+# Demonstrates: config file parsing for CodeSearch
+
+app:
+  name: "CodeSearch Demo"
+  version: "1.0.0"
+  # TODO: Update version for release
+  environment: "development"
+
+# Database settings
+database:
+  host: "localhost"
+  port: 5432
+  # FIXME: Use environment variables for credentials
+  username: "admin"
+  password: "secret"
+  database: "demo_db"
+
+# Cache configuration
+cache:
+  enabled: true
+  # Magic number
+  ttl: 3600
+  size: 1000
+
+# Logging
+logging:
+  level: "info"
+  format: "json"
+
+# Feature flags
+features:
+  search: true
+  analysis: true
+  # TODO: Implement graph visualization
+  graph_viz: false

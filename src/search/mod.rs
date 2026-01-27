@@ -89,6 +89,78 @@ mod tests {
     }
 
     #[test]
+    fn test_list_files_with_extension_filter() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("test1.rs"), "test").unwrap();
+        fs::write(dir.path().join("test2.py"), "test").unwrap();
+
+        let files = list_files(dir.path(), Some(&["rs".to_string()]), None);
+        assert!(files.is_ok());
+        let files = files.unwrap();
+        assert_eq!(files.len(), 1);
+    }
+
+    #[test]
+    fn test_list_files_nonexistent_directory() {
+        use std::path::Path;
+
+        let result = list_files(Path::new("/nonexistent/path"), None, None);
+        assert!(result.is_err());
+        // The error should mention the directory was not found
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("not found") || error_msg.contains("Directory"));
+    }
+
+    #[test]
+    fn test_list_files_file_instead_of_directory() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("test.rs");
+        fs::write(&file_path, "fn test() {}").unwrap();
+
+        // Try to list files on a file path instead of directory
+        let result = list_files(&file_path, None, None);
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("not a directory") || error_msg.contains("Invalid"));
+    }
+
+    #[test]
+    fn test_search_code_with_invalid_regex() {
+        use std::fs;
+        use std::path::Path;
+        use tempfile::tempdir;
+
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("test.rs"), "fn test() {}").unwrap();
+
+        // Invalid regex pattern (unclosed bracket)
+        let options = SearchOptions {
+            extensions: Some(vec!["rs".to_string()]),
+            ignore_case: false,
+            fuzzy: false,
+            fuzzy_threshold: 0.6,
+            max_results: 10,
+            exclude: None,
+            rank: false,
+            cache: false,
+            semantic: false,
+            benchmark: false,
+            vs_grep: false,
+        };
+
+        let result = search_code("[invalid", dir.path(), &options);
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Invalid regex") || error_msg.contains("Invalid pattern"));
+    }
+
+    #[test]
     fn test_search_code_with_extension_filter() {
         use std::fs;
         use tempfile::tempdir;

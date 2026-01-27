@@ -1,10 +1,12 @@
 //! File System Abstraction Module
 //!
 //! Provides trait-based file system operations for dependency injection and testing.
+//! Also includes utilities for directory walking with filtering.
 
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 /// Trait for file system operations
 ///
@@ -211,9 +213,142 @@ impl FileSystem for MockFileSystem {
     }
 }
 
+/// Configuration for directory walking operations
+#[derive(Debug, Clone, Default)]
+pub struct WalkOptions {
+    /// File extensions to include (e.g., vec!["rs".to_string(), "py".to_string()])
+    pub extensions: Option<Vec<String>>,
+    /// Directories to exclude (e.g., vec!["target".to_string(), "node_modules".to_string()])
+    pub exclude: Option<Vec<String>>,
+    /// Minimum depth (0 = start from root)
+    pub min_depth: Option<usize>,
+    /// Maximum depth (None = unlimited)
+    pub max_depth: Option<usize>,
+    /// Whether to follow symbolic links
+    pub follow_links: bool,
+}
+
+/// Create a filtered WalkDir iterator based on the provided options
+///
+/// This function eliminates code duplication across the codebase by providing
+/// a single, reusable way to create filtered directory walkers.
+///
+/// # Arguments
+///
+/// * `path` - Root path to start walking from
+/// * `options` - WalkOptions containing filtering criteria
+///
+/// # Returns
+///
+/// An iterator that yields only file entries matching the criteria
+///
+/// # Examples
+///
+/// ```
+/// use codesearch::fs::{create_filtered_walker, WalkOptions};
+/// use std::path::Path;
+///
+/// let options = WalkOptions {
+///     extensions: Some(vec!["rs".to_string(), "py".to_string()]),
+///     exclude: Some(vec!["target".to_string()]),
+///     ..Default::default()
+/// };
+///
+/// let walker = create_filtered_walker(Path::new("./src"), &options);
+/// for entry in walker {
+///     println!("Found: {:?}", entry.path());
+/// }
+/// ```
+pub fn create_filtered_walker(
+    path: &Path,
+    options: &WalkOptions,
+) -> impl Iterator<Item = walkdir::DirEntry> {
+    let mut walk_dir = WalkDir::new(path);
+
+    if let Some(min_depth) = options.min_depth {
+        walk_dir = walk_dir.min_depth(min_depth);
+    }
+
+    if let Some(max_depth) = options.max_depth {
+        walk_dir = walk_dir.max_depth(max_depth);
+    }
+
+    if options.follow_links {
+        walk_dir = walk_dir.follow_links(true);
+    }
+
+    walk_dir
+        .into_iter()
+        .filter_entry(|e| {
+            // Filter out excluded directories
+            if let Some(name) = e.file_name().to_str() {
+                if let Some(ref exclude_dirs) = options.exclude {
+                    for exclude_dir in exclude_dirs {
+                        if name == exclude_dir {
+                            return false;
+                        }
+                    }
+                }
+            }
+            true
+        })
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+}
+
+/// Get all files matching the given options as a Vec<PathBuf>
+///
+/// This is a convenience function that collects the walker results into a vector.
+///
+/// # Arguments
+///
+/// * `path` - Root path to start walking from
+/// * `options` - WalkOptions containing filtering criteria
+///
+/// # Returns
+///
+/// A vector of PathBuf objects pointing to matching files
+///
+/// # Examples
+///
+/// ```
+/// use codesearch::fs::{collect_files, WalkOptions};
+/// use std::path::Path;
+///
+/// let options = WalkOptions {
+///     extensions: Some(vec!["rs".to_string()]),
+///     ..Default::default()
+/// };
+///
+/// let rust_files = collect_files(Path::new("./src"), &options);
+/// println!("Found {} Rust files", rust_files.len());
+/// ```
+pub fn collect_files(path: &Path, options: &WalkOptions) -> Vec<PathBuf> {
+    let walker = create_filtered_walker(path, options);
+
+    walker
+        .filter(|entry| {
+            // Filter by extension if specified
+            if let Some(ref exts) = options.extensions {
+                let file_path = entry.path();
+                if let Some(ext) = file_path.extension().and_then(|s| s.to_str()) {
+                    exts.iter().any(|e| e == ext)
+                } else {
+                    false
+                }
+            } else {
+                true
+            }
+        })
+        .map(|e| e.path().to_path_buf())
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use tempfile::TempDir;
 
     #[test]
     fn test_real_filesystem_read() {
@@ -260,5 +395,113 @@ mod tests {
         assert!(fs.has_file(Path::new("file1.txt")));
         assert!(fs.has_file(Path::new("file2.txt")));
         assert!(fs.has_file(Path::new("file3.txt")));
+    }
+
+    // Tests for WalkOptions and file walking utilities
+
+    #[test]
+    fn test_walk_options_default() {
+        let options = WalkOptions::default();
+        assert!(options.extensions.is_none());
+        assert!(options.exclude.is_none());
+        assert!(options.min_depth.is_none());
+        assert!(options.max_depth.is_none());
+        assert!(!options.follow_links);
+    }
+
+    #[test]
+    fn test_collect_files_with_extensions() {
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path();
+
+        // Create test files
+        fs::write(dir_path.join("test1.rs"), "fn test1() {}").unwrap();
+        fs::write(dir_path.join("test2.rs"), "fn test2() {}").unwrap();
+        fs::write(dir_path.join("test.py"), "def test(): pass").unwrap();
+
+        let options = WalkOptions {
+            extensions: Some(vec!["rs".to_string()]),
+            ..Default::default()
+        };
+
+        let files = collect_files(dir_path, &options);
+        assert_eq!(files.len(), 2);
+        assert!(files.iter().any(|p| p.ends_with("test1.rs")));
+        assert!(files.iter().any(|p| p.ends_with("test2.rs")));
+        assert!(!files.iter().any(|p| p.ends_with("test.py")));
+    }
+
+    #[test]
+    fn test_collect_files_with_exclude() {
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path();
+
+        // Create directory structure
+        let target_dir = dir_path.join("target");
+        fs::create_dir_all(&target_dir).unwrap();
+        fs::write(dir_path.join("main.rs"), "fn main() {}").unwrap();
+        fs::write(target_dir.join("build.rs"), "build script").unwrap();
+
+        let options = WalkOptions {
+            exclude: Some(vec!["target".to_string()]),
+            ..Default::default()
+        };
+
+        let files = collect_files(dir_path, &options);
+        assert_eq!(files.len(), 1);
+        assert!(files[0].ends_with("main.rs"));
+    }
+
+    #[test]
+    fn test_collect_files_empty_directory() {
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path();
+
+        let options = WalkOptions::default();
+        let files = collect_files(dir_path, &options);
+
+        assert_eq!(files.len(), 0);
+    }
+
+    #[test]
+    fn test_collect_files_multiple_extensions() {
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path();
+
+        // Create test files with different extensions
+        fs::write(dir_path.join("test.rs"), "rust code").unwrap();
+        fs::write(dir_path.join("test.py"), "python code").unwrap();
+        fs::write(dir_path.join("test.js"), "javascript code").unwrap();
+        fs::write(dir_path.join("test.txt"), "text file").unwrap();
+
+        let options = WalkOptions {
+            extensions: Some(vec!["rs".to_string(), "py".to_string(), "js".to_string()]),
+            ..Default::default()
+        };
+
+        let files = collect_files(dir_path, &options);
+        assert_eq!(files.len(), 3);
+        assert!(!files.iter().any(|p| p.ends_with("test.txt")));
+    }
+
+    #[test]
+    fn test_collect_files_with_max_depth() {
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path();
+
+        // Create nested directory structure
+        let sub_dir = dir_path.join("src");
+        fs::create_dir_all(&sub_dir).unwrap();
+        fs::write(dir_path.join("root.rs"), "root").unwrap();
+        fs::write(sub_dir.join("nested.rs"), "nested").unwrap();
+
+        let options = WalkOptions {
+            max_depth: Some(1), // Only root level
+            ..Default::default()
+        };
+
+        let files = collect_files(dir_path, &options);
+        assert_eq!(files.len(), 1);
+        assert!(files[0].ends_with("root.rs"));
     }
 }

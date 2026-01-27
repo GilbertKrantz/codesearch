@@ -75,3 +75,6 @@ pub use pdg::{analyze_file_pdg, build_pdg_from_source, ProgramDependencyGraph};
 pub use remote::{search_remote_repository, RemoteSearcher, RemoteSearchResult};
 pub use watcher::{start_watching, FileWatcher};
 
+// Re-export fs utilities
+pub use fs::{FileSystem, RealFileSystem, MockFileSystem, WalkOptions, create_filtered_walker, collect_files};
+

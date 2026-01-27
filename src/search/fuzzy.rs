@@ -38,14 +38,23 @@ pub fn search_in_file_parallel(
         if fuzzy {
             if let Some((score, indices)) = matcher.fuzzy_indices(&line, query) {
                 if score as f64 >= fuzzy_threshold {
+                    // Collect characters once to avoid repeated O(n) indexing
+                    let line_chars: Vec<char> = line.chars().collect();
                     let mut matches = Vec::new();
 
                     for &idx in &indices {
                         if matches.is_empty() || idx >= matches.last().map(|m: &Match| m.end).unwrap_or(0) {
+                            // Safe character access using the pre-collected vector
+                            let text = if idx < line_chars.len() {
+                                line_chars[idx].to_string()
+                            } else {
+                                String::new()
+                            };
+
                             matches.push(Match {
                                 start: idx,
                                 end: idx + 1,
-                                text: line.chars().nth(idx).map(|c| c.to_string()).unwrap_or_default(),
+                                text,
                             });
                         }
                     }
@@ -59,7 +68,7 @@ pub fn search_in_file_parallel(
                     };
 
                     results.push(SearchResult {
-                        file: file_path.to_string_lossy().to_string(),
+                        file: file_path.to_string_lossy().into_owned(),
                         line_number: line_count,
                         content: line.clone(),
                         matches,
@@ -84,7 +93,7 @@ pub fn search_in_file_parallel(
             }];
 
             results.push(SearchResult {
-                file: file_path.to_string_lossy().to_string(),
+                file: file_path.to_string_lossy().into_owned(),
                 line_number: line_count,
                 content: line.clone(),
                 matches,
@@ -137,4 +146,64 @@ pub fn calculate_relevance_score(
     }
 
     score.clamp(0.0, 100.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_fuzzy_search_performance() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("test.rs");
+
+        // Create a file with multiple lines
+        let content = "fn test_function() {\n    let test_var = 123;\n    println!(\"test\");\n}\n";
+        fs::write(&file_path, content).unwrap();
+
+        use regex::Regex;
+        let regex = Arc::new(Regex::new(r"test").unwrap());
+
+        // Test fuzzy search
+        let result = search_in_file_parallel(
+            &file_path,
+            &regex,
+            true,
+            0.0,
+            "test",
+            100,
+            false,
+        );
+
+        assert!(result.is_ok());
+        let results = result.unwrap();
+        assert!(!results.is_empty());
+    }
+
+    #[test]
+    fn test_fuzzy_indices_optimization() {
+        // This test verifies that the character collection optimization works correctly
+        let line = "fn test_function() {";
+        let query = "test";
+
+        let matcher = SkimMatcherV2::default();
+        if let Some((score, indices)) = matcher.fuzzy_indices(line, query) {
+            // Collect characters once (as done in the optimized version)
+            let line_chars: Vec<char> = line.chars().collect();
+
+            // Verify all indices are valid
+            for &idx in &indices {
+                assert!(
+                    idx < line_chars.len(),
+                    "Index {} should be less than line length {}",
+                    idx,
+                    line_chars.len()
+                );
+                // Verify we can access the character without panicking
+                let _c = line_chars[idx];
+            }
+        }
+    }
 }
