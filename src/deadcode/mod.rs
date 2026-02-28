@@ -1,32 +1,24 @@
 //! Dead Code Detection Module
 //!
 //! Identifies potentially unused code: functions, classes, imports, and commented-out code.
-//! 
-//! This module is organized into sub-modules for better maintainability:
+//!
+//! Sub-modules:
 //! - `types`: Data structures for dead code items
 //! - `helpers`: Utility functions for detection
 //! - `detectors`: Individual detection functions for different code patterns
+//! - `detector_impl`: Core find_dead_code logic
 
-mod types;
-mod helpers;
+mod detector_impl;
 mod detectors;
+mod helpers;
+mod types;
 
+pub use detector_impl::find_dead_code;
 pub use types::DeadCodeItem;
 
-use crate::parser::{extract_classes, extract_functions, extract_identifier_references, read_file_content};
-use crate::search::list_files;
 use colored::*;
 use std::collections::HashMap;
 use std::path::Path;
-
-use helpers::is_special_function;
-use detectors::{
-    detect_unused_variables,
-    detect_unreachable_code,
-    detect_empty_functions,
-    detect_todo_fixme,
-    detect_dead_code_patterns,
-};
 
 /// Detect potentially dead/unused code in the codebase
 pub fn detect_dead_code(
@@ -48,91 +40,6 @@ pub fn detect_dead_code(
     print_dead_code_results(&dead_code_items);
 
     Ok(())
-}
-
-/// Find dead code and return the results (shared implementation)
-pub fn find_dead_code(
-    path: &Path,
-    extensions: Option<&[String]>,
-    exclude: Option<&[String]>,
-) -> Result<Vec<DeadCodeItem>, Box<dyn std::error::Error>> {
-    let files = list_files(path, extensions, exclude)?;
-    
-    if files.is_empty() {
-        return Ok(Vec::new());
-    }
-
-    let mut dead_code_items: Vec<DeadCodeItem> = Vec::new();
-    let mut all_definitions: HashMap<String, (String, usize, String)> = HashMap::new();
-    let mut all_references: HashMap<String, usize> = HashMap::new();
-
-    // First pass: collect all definitions and references
-    for file in &files {
-        let content = read_file_content(&file.path);
-
-        // Extract function definitions
-        for (name, line_num) in extract_functions(&content, &file.path) {
-            if !is_special_function(&name) {
-                all_definitions.insert(
-                    name.clone(),
-                    (file.path.clone(), line_num, "function".to_string()),
-                );
-            }
-        }
-
-        // Extract class definitions
-        for (name, line_num) in extract_classes(&content, &file.path) {
-            all_definitions.insert(
-                name.clone(),
-                (file.path.clone(), line_num, "class/struct".to_string()),
-            );
-        }
-
-        // Count all identifier references
-        for ref_name in extract_identifier_references(&content) {
-            *all_references.entry(ref_name).or_insert(0) += 1;
-        }
-    }
-
-    // Second pass: find definitions with low reference count
-    for (name, (file, line, item_type)) in &all_definitions {
-        let ref_count = all_references.get(name).copied().unwrap_or(0);
-        
-        if ref_count <= 1 {
-            dead_code_items.push(DeadCodeItem {
-                file: file.clone(),
-                line_number: *line,
-                item_type: item_type.clone(),
-                name: name.clone(),
-                reason: "Only defined, never used elsewhere".to_string(),
-            });
-        } else if ref_count == 2 && item_type == "function" {
-            dead_code_items.push(DeadCodeItem {
-                file: file.clone(),
-                line_number: *line,
-                item_type: item_type.clone(),
-                name: name.clone(),
-                reason: "Used only once - consider inlining".to_string(),
-            });
-        }
-    }
-
-    // Third pass: detect other dead code patterns
-    for file in &files {
-        let content = read_file_content(&file.path);
-        detect_dead_code_patterns(&file.path, &content, &mut dead_code_items);
-        detect_unused_variables(&file.path, &content, &mut dead_code_items);
-        detect_unreachable_code(&file.path, &content, &mut dead_code_items);
-        detect_empty_functions(&file.path, &content, &mut dead_code_items);
-        detect_todo_fixme(&file.path, &content, &mut dead_code_items);
-    }
-
-    // Sort by file and line number
-    dead_code_items.sort_by(|a, b| {
-        a.file.cmp(&b.file).then(a.line_number.cmp(&b.line_number))
-    });
-
-    Ok(dead_code_items)
 }
 
 fn print_dead_code_results(items: &[DeadCodeItem]) {

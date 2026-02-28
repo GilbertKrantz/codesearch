@@ -1,6 +1,11 @@
 //! Data Flow Graph (DFG) Module
 //!
 //! Analyzes data flow between variables and operations in code.
+//!
+//! ## Data dependency edges
+//!
+//! [`DfgEdge`] with [`DataFlowType`] represents **data dependency relationships**:
+//! - Definition, Use, Assignment, Parameter, Return
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};

@@ -1,10 +1,40 @@
 //! AST-Based Code Analysis Module
 //!
 //! Provides syntax tree analysis for precise code structure understanding using native parsers.
+//!
+//! ## Syntax relationship edges
+//!
+//! Use [`get_syntax_edges`] to extract explicit syntax relationships (parent-child, contains, imports)
+//! from an [`AstAnalysis`]. These edges complement execution flow (CFG) and data dependencies (DFG).
 
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use crate::parser::{CodeParser, get_parser_for_extension, ParseError};
+use crate::parser::{get_parser_for_extension, ParseError};
+
+/// Syntax relationship type for AST edges
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum SyntaxRelationshipType {
+    /// Parent contains child (module/class scope)
+    Contains,
+    /// Function has parameter
+    HasParameter,
+    /// Class has method
+    HasMethod,
+    /// Class has field
+    HasField,
+    /// Import references module
+    Imports,
+}
+
+/// An edge representing a syntax relationship between two AST elements
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AstSyntaxEdge {
+    pub from_node: String,
+    pub from_line: usize,
+    pub to_node: String,
+    pub to_line: usize,
+    pub relationship: SyntaxRelationshipType,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AstNode {
@@ -100,6 +130,59 @@ impl AstParser {
     }
 }
 
+/// Extract syntax relationship edges from AST analysis.
+///
+/// Returns explicit edges for: class→method, class→field, function→parameter, import→module.
+/// Together with CFG (execution flow) and DFG (data dependencies), these cover all relationship types.
+pub fn get_syntax_edges(analysis: &AstAnalysis) -> Vec<AstSyntaxEdge> {
+    let mut edges = Vec::new();
+
+    for func in &analysis.functions {
+        for param in &func.parameters {
+            edges.push(AstSyntaxEdge {
+                from_node: func.name.clone(),
+                from_line: func.line,
+                to_node: param.clone(),
+                to_line: func.line,
+                relationship: SyntaxRelationshipType::HasParameter,
+            });
+        }
+    }
+
+    for class in &analysis.classes {
+        for method in &class.methods {
+            edges.push(AstSyntaxEdge {
+                from_node: class.name.clone(),
+                from_line: class.line,
+                to_node: method.clone(),
+                to_line: class.line,
+                relationship: SyntaxRelationshipType::HasMethod,
+            });
+        }
+        for field in &class.fields {
+            edges.push(AstSyntaxEdge {
+                from_node: class.name.clone(),
+                from_line: class.line,
+                to_node: field.clone(),
+                to_line: class.line,
+                relationship: SyntaxRelationshipType::HasField,
+            });
+        }
+    }
+
+    for import in &analysis.imports {
+        edges.push(AstSyntaxEdge {
+            from_node: import.module.clone(),
+            from_line: import.line,
+            to_node: import.items.join(", "),
+            to_line: import.line,
+            relationship: SyntaxRelationshipType::Imports,
+        });
+    }
+
+    edges
+}
+
 /// Analyze a file and extract AST information
 pub fn analyze_file(path: &Path) -> Result<AstAnalysis, ParseError> {
     let ext = path.extension()
@@ -163,5 +246,23 @@ mod tests {
         assert_eq!(analysis.functions[0].name, "hello");
         assert_eq!(analysis.classes.len(), 1);
         assert_eq!(analysis.classes[0].name, "Point");
+    }
+
+    #[test]
+    fn test_get_syntax_edges() {
+        let code = r#"
+            fn add(x: i32, y: i32) -> i32 { x + y }
+            struct Point { x: f64, y: f64 }
+        "#;
+        let analysis = analyze_content(code, "rs").unwrap();
+        let edges = get_syntax_edges(&analysis);
+        assert!(!edges.is_empty());
+        let has_param = edges
+            .iter()
+            .any(|e| matches!(e.relationship, SyntaxRelationshipType::HasParameter));
+        let has_field = edges
+            .iter()
+            .any(|e| matches!(e.relationship, SyntaxRelationshipType::HasField));
+        assert!(has_param || has_field);
     }
 }

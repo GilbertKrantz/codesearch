@@ -25,17 +25,7 @@ pub use javascript::JavaScriptParser;
 pub use go::GoParser;
 pub use java::JavaParser;
 
-// Re-export utility functions for backward compatibility
-pub use utils::{
-    extract_classes,
-    extract_function_calls,
-    extract_functions,
-    extract_identifier_from_match,
-    extract_identifier_references,
-    get_file_extension,
-    is_keyword_or_builtin,
-    read_file_content,
-};
+pub use utils::{get_file_extension, read_file_content};
 
 /// Get a parser for the given file extension
 pub fn get_parser_for_extension(ext: &str) -> Option<Box<dyn CodeParser>> {

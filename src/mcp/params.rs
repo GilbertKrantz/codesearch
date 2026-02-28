@@ -122,3 +122,34 @@ pub struct CircularParams {
     #[serde(default)]
     pub exclude: Option<Vec<String>>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct FindSymbolParams {
+    /// Symbol to find (function, class, or identifier)
+    pub symbol: String,
+    /// Directory to search (default: current directory)
+    #[serde(default)]
+    pub path: Option<String>,
+    /// File extensions to include (e.g., ["rs", "py", "js"])
+    #[serde(default)]
+    pub extensions: Option<Vec<String>>,
+    /// Exclude directories (e.g., ["target", "node_modules"])
+    #[serde(default)]
+    pub exclude: Option<Vec<String>>,
+    /// Filter: definition, references, callers, or all
+    #[serde(default)]
+    pub find_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GetHealthParams {
+    /// Directory to analyze (default: current directory)
+    #[serde(default)]
+    pub path: Option<String>,
+    /// File extensions to include (e.g., ["rs", "py", "js"])
+    #[serde(default)]
+    pub extensions: Option<Vec<String>>,
+    /// Exclude directories (e.g., ["target", "node_modules"])
+    #[serde(default)]
+    pub exclude: Option<Vec<String>>,
+}

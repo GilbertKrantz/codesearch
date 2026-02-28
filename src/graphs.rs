@@ -1,6 +1,16 @@
 //! Unified Graph Analysis Module
 //!
 //! Provides a common interface for all graph types and unified visualization.
+//!
+//! ## Edge relationship types
+//!
+//! The codebase represents three categories of edges:
+//!
+//! | Source   | Edge type                              | Relationship          |
+//! |----------|----------------------------------------|------------------------|
+//! | **AST**  | [`crate::ast::AstSyntaxEdge`]           | Syntax: Contains, HasParameter, HasMethod, HasField, Imports |
+//! | **CFG**  | [`crate::cfg::CfgEdge`]                 | Execution flow: Sequential, Conditional, LoopBack, Break, Continue, Return |
+//! | **DFG**  | [`crate::dfg::DfgEdge`]                 | Data dependencies: Definition, Use, Assignment, Parameter, Return |
 
 use crate::ast::analyze_file;
 use crate::callgraph::build_call_graph;

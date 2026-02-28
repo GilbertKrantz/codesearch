@@ -106,6 +106,24 @@ impl CodeSearchMcpService {
     ) -> Json<serde_json::Value> {
         tools::detect_circular_tool(params).await
     }
+
+    /// Find symbol: definition, references, callers (structure-aware)
+    #[tool(description = "Find symbol definition, references, and callers. Structure-aware search for functions, classes, and identifiers")]
+    pub async fn find_symbol(
+        &self,
+        params: Parameters<FindSymbolParams>,
+    ) -> Json<serde_json::Value> {
+        tools::find_symbol_tool(params).await
+    }
+
+    /// Get codebase health score
+    #[tool(description = "Get codebase health score (0-100) from dead code, duplicates, and complexity. CI-friendly")]
+    pub async fn get_health(
+        &self,
+        params: Parameters<GetHealthParams>,
+    ) -> Json<serde_json::Value> {
+        tools::get_health_tool(params).await
+    }
 }
 
 #[cfg(feature = "mcp")]

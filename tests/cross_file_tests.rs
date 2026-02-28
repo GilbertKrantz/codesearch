@@ -203,10 +203,12 @@ fn test_circular_detection_across_files() {
     let cycles = codesearch::circular::find_circular_calls(temp_dir.path(), options.extensions.as_deref(), options.exclude.as_deref()).unwrap();
 
     // Should detect the circular dependency across files
-    if !cycles.is_empty() {
-        // Verify cycle spans multiple files
-        assert!(cycles[0].files.len() > 1, "Cycle should span multiple files");
-    }
+    assert!(!cycles.is_empty(), "Should find at least one cycle");
+    let multi_file_cycle = cycles.iter().find(|c| c.files.len() > 1);
+    assert!(
+        multi_file_cycle.is_some(),
+        "Cycle should span multiple files (function_a->function_b->function_c->function_a)"
+    );
 }
 
 #[test]

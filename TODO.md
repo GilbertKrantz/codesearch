@@ -84,9 +84,38 @@
 
 ## 🔄 In Progress
 
-- None currently
+- **Capability Redesign** (see docs/CAPABILITY_REDESIGN.md)
+  - Phase 1: health command, graph consolidation
+  - Phase 2: find <symbol> command
+  - Phase 3: health scoring, --fail-under
+  - Phase 4: MCP expansion (find_symbol, get_health)
 
 ## 📋 Planned
+
+### Capability Redesign (from docs/CAPABILITY_REDESIGN.md)
+
+**Differentiator:** "The local code lens for terminal users and AI agents"
+
+- [x] **Phase 1: Consolidation** ✅
+  - [x] Add `codesearch health` (deadcode + duplicates + complexity)
+  - [x] Add `codesearch graph <cfg|dfg|dep|ast|pdg>` as unified entry point
+  - [x] Merge `metrics` into `analyze` (--metrics flag)
+  - [x] Deprecate `remote`, `design-metrics`, `graph-all`, `metrics`
+
+- [ ] **Phase 2: Structural Find**
+  - [ ] Implement `codesearch find <symbol>` (definition, references, callers)
+  - [ ] Add `--type definition|callers|references`
+  - [ ] JSON output for piping
+
+- [x] **Phase 3: Health Scoring** ✅
+  - [x] Health score formula (0-100)
+  - [x] `--fail-under` for CI gates
+  - [x] Structured JSON output
+
+- [ ] **Phase 4: MCP Expansion**
+  - [ ] Add `find_symbol` MCP tool
+  - [ ] Add `get_health` MCP tool
+  - [ ] Update README: MCP first-class
 
 ### Maintainability Improvements (High Priority)
 - [x] **Extract trait abstractions for core components** ✅ (Jan 2026)

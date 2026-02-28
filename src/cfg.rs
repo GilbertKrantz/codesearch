@@ -1,6 +1,11 @@
 //! Control Flow Graph (CFG) Module
 //!
 //! Analyzes control flow within functions, tracking branches, loops, and jumps.
+//!
+//! ## Execution flow edges
+//!
+//! [`CfgEdge`] with [`EdgeType`] represents **execution flow relationships**:
+//! - Sequential, Conditional, LoopBack, Break, Continue, Return
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};

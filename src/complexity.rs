@@ -105,6 +105,24 @@ pub fn analyze_complexity(
     Ok(())
 }
 
+/// Calculate complexity metrics for all files in a directory (returns metrics without printing)
+pub fn calculate_complexity(
+    path: &Path,
+    extensions: Option<&[String]>,
+    exclude: Option<&[String]>,
+) -> Result<Vec<ComplexityMetrics>, Box<dyn std::error::Error>> {
+    let files = list_files(path, extensions, exclude)?;
+    let mut all_metrics = Vec::new();
+
+    for file in &files {
+        if let Ok(content) = fs::read_to_string(&file.path) {
+            all_metrics.push(calculate_file_complexity(&file.path, &content));
+        }
+    }
+
+    Ok(all_metrics)
+}
+
 /// Calculate complexity metrics for a single file
 pub fn calculate_file_complexity(file_path: &str, content: &str) -> ComplexityMetrics {
     ComplexityMetrics {

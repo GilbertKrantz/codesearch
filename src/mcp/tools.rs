@@ -3,7 +3,7 @@
 use super::params::*;
 use crate::search::{list_files, search_code};
 use crate::types::{FileInfo, SearchOptions, SearchResult};
-use crate::{circular, complexity, deadcode, duplicates};
+use crate::{circular, complexity, deadcode, duplicates, find, health};
 use rmcp::handler::server::wrapper::{Json, Parameters};
 use std::path::PathBuf;
 
@@ -204,14 +204,80 @@ pub async fn detect_circular_tool(params: Parameters<CircularParams>) -> Json<se
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
     
-    let cycles = circular::find_circular_dependencies(
+    let cycles = circular::find_circular_calls(
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
     ).unwrap_or_default();
     
     Json(serde_json::json!({
-        "cycles": cycles,
+        "cycles": cycles.iter().map(|c| serde_json::json!({
+            "chain": c.chain,
+            "files": c.files
+        })).collect::<Vec<_>>(),
         "total_cycles": cycles.len()
+    }))
+}
+
+/// Find symbol: definition, references, callers (structure-aware)
+pub async fn find_symbol_tool(params: Parameters<FindSymbolParams>) -> Json<serde_json::Value> {
+    let params = params.0;
+    let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
+    let find_type = find::FindType::from_str(params.find_type.as_deref().unwrap_or("all"));
+    
+    let report = find::find_symbol(
+        &params.symbol,
+        &path_buf,
+        params.extensions.as_deref(),
+        params.exclude.as_deref(),
+        find_type,
+    ).unwrap_or_else(|_| find::FindReport {
+        symbol: params.symbol.clone(),
+        definitions: vec![],
+        references: vec![],
+        callers: vec![],
+    });
+    
+    Json(serde_json::json!({
+        "symbol": report.symbol,
+        "definitions": report.definitions,
+        "references": report.references,
+        "callers": report.callers
+    }))
+}
+
+/// Get codebase health score and details
+pub async fn get_health_tool(params: Parameters<GetHealthParams>) -> Json<serde_json::Value> {
+    let params = params.0;
+    let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
+    
+    let report = health::scan_health(
+        &path_buf,
+        params.extensions.as_deref(),
+        params.exclude.as_deref(),
+    ).unwrap_or_else(|_| health::HealthReport {
+        score: 0,
+        dead_code_count: 0,
+        duplicate_count: 0,
+        complex_files_count: 0,
+        total_files: 0,
+        details: health::HealthDetails {
+            dead_code_penalty: 0,
+            duplicate_penalty: 0,
+            complexity_penalty: 0,
+        },
+    });
+    
+    Json(serde_json::json!({
+        "score": report.score,
+        "dead_code_count": report.dead_code_count,
+        "duplicate_count": report.duplicate_count,
+        "complex_files_count": report.complex_files_count,
+        "total_files": report.total_files,
+        "details": {
+            "dead_code_penalty": report.details.dead_code_penalty,
+            "duplicate_penalty": report.details.duplicate_penalty,
+            "complexity_penalty": report.details.complexity_penalty
+        }
     }))
 }

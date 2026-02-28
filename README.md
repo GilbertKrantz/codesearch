@@ -44,6 +44,8 @@ codesearch duplicates ./src
 
 ### **What Makes CodeSearch Different?**
 
+Unlike **Joern** (CPG graph DB, Scala queries, security research) or **CodeQL** (QL logic language, GitHub extractors, path queries), CodeSearch needs **no indexing or config**. It's grep-like search plus structure-aware find, health scans, and MCP for AI agents—all from the terminal, immediately. See [docs/CAPABILITY_REDESIGN.md](docs/CAPABILITY_REDESIGN.md) for a full comparison.
+
 | Feature | Benefit | Example |
 |---------|---------|---------|
 | **Language-Aware** | Understands functions, classes, imports in 48+ languages | Find `fn main` in Rust, `def main` in Python |

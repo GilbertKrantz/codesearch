@@ -124,6 +124,26 @@ pub enum Commands {
         #[arg(long, value_delimiter = ',')]
         exclude: Option<Vec<String>>,
     },
+    /// Find symbol: definition, references, callers (structure-aware)
+    Find {
+        /// Symbol to find (function, class, or identifier)
+        symbol: String,
+        /// Path to search (default: current directory)
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// File extensions to include (e.g., rs,py,js)
+        #[arg(short, long, value_delimiter = ',')]
+        extensions: Option<Vec<String>>,
+        /// Exclude directories (e.g., target,node_modules)
+        #[arg(long, value_delimiter = ',')]
+        exclude: Option<Vec<String>>,
+        /// Filter: definition, references, callers, or all
+        #[arg(long, default_value = "all")]
+        r#type: String,
+        /// Output format (text, json)
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
     /// Analyze codebase metrics and statistics
     Analyze {
         /// Path to analyze (default: current directory)
@@ -135,6 +155,12 @@ pub enum Commands {
         /// Exclude directories (e.g., target,node_modules)
         #[arg(long, value_delimiter = ',')]
         exclude: Option<Vec<String>>,
+        /// Include Halstead/maintainability metrics (merged from metrics command)
+        #[arg(long)]
+        metrics: bool,
+        /// Output format when used with --metrics (text, json)
+        #[arg(long, default_value = "text")]
+        format: String,
     },
     /// Analyze code complexity metrics
     Complexity {
@@ -220,6 +246,24 @@ pub enum Commands {
         #[arg(long, value_delimiter = ',')]
         exclude: Option<Vec<String>>,
     },
+    /// Unified codebase health scan (dead code + duplicates + complexity)
+    Health {
+        /// Path to analyze (default: current directory)
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// File extensions to include (e.g., rs,py,js)
+        #[arg(short, long, value_delimiter = ',')]
+        extensions: Option<Vec<String>>,
+        /// Exclude directories (e.g., target,node_modules)
+        #[arg(long, value_delimiter = ',')]
+        exclude: Option<Vec<String>>,
+        /// Output format (text, json)
+        #[arg(long, default_value = "text")]
+        format: String,
+        /// Exit with code 1 if health score is below this threshold (CI gate)
+        #[arg(long)]
+        fail_under: Option<u8>,
+    },
     /// Detect circular function calls
     Circular {
         /// Path to analyze (default: current directory)
@@ -262,6 +306,33 @@ pub enum Commands {
         /// Index file path
         #[arg(long, default_value = ".codesearch/index.json")]
         index_file: PathBuf,
+    },
+    /// Unified graph analysis: cfg, dfg, dep, ast, pdg
+    Graph {
+        /// Graph type (cfg, dfg, dep, ast, pdg)
+        #[arg(value_parser = ["cfg", "dfg", "dep", "ast", "pdg"])]
+        graph_type: String,
+        /// Path to analyze (file or directory)
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// File extensions to analyze (e.g., rs,py,js)
+        #[arg(short, long, value_delimiter = ',')]
+        extensions: Option<Vec<String>>,
+        /// Exclude directories (e.g., target,node_modules)
+        #[arg(long, value_delimiter = ',')]
+        exclude: Option<Vec<String>>,
+        /// Output format (text, json, dot)
+        #[arg(long, default_value = "text")]
+        format: String,
+        /// Export to file
+        #[arg(long)]
+        export: Option<PathBuf>,
+        /// Show parallelization opportunities (pdg only)
+        #[arg(long)]
+        parallel: bool,
+        /// Show circular dependencies only (dep only)
+        #[arg(long)]
+        circular_only: bool,
     },
     /// Analyze code using AST (Abstract Syntax Tree)
     Ast {
