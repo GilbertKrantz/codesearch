@@ -3,8 +3,8 @@
 //! Provides fuzzy matching and relevance scoring for search results.
 
 use crate::types::{Match, SearchResult};
-use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
+use fuzzy_matcher::skim::SkimMatcherV2;
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -43,7 +43,9 @@ pub fn search_in_file_parallel(
                     let mut matches = Vec::new();
 
                     for &idx in &indices {
-                        if matches.is_empty() || idx >= matches.last().map(|m: &Match| m.end).unwrap_or(0) {
+                        if matches.is_empty()
+                            || idx >= matches.last().map(|m: &Match| m.end).unwrap_or(0)
+                        {
                             // Safe character access using the pre-collected vector
                             let text = if idx < line_chars.len() {
                                 line_chars[idx].to_string()
@@ -60,8 +62,23 @@ pub fn search_in_file_parallel(
                     }
 
                     let (score_val, relevance) = if rank {
-                        let s = calculate_relevance_score(&line, query, line_count, file_path, true, Some(score));
-                        let r = if s >= 80.0 { "Very High" } else if s >= 60.0 { "High" } else if s >= 40.0 { "Medium" } else { "Low" };
+                        let s = calculate_relevance_score(
+                            &line,
+                            query,
+                            line_count,
+                            file_path,
+                            true,
+                            Some(score),
+                        );
+                        let r = if s >= 80.0 {
+                            "Very High"
+                        } else if s >= 60.0 {
+                            "High"
+                        } else if s >= 40.0 {
+                            "Medium"
+                        } else {
+                            "Low"
+                        };
                         (s, r.to_string())
                     } else {
                         (score as f64, "Medium".to_string())
@@ -80,7 +97,15 @@ pub fn search_in_file_parallel(
         } else if let Some(mat) = regex.find_iter(&line).next() {
             let (score_val, relevance) = if rank {
                 let s = calculate_relevance_score(&line, query, line_count, file_path, false, None);
-                let r = if s >= 80.0 { "Very High" } else if s >= 60.0 { "High" } else if s >= 40.0 { "Medium" } else { "Low" };
+                let r = if s >= 80.0 {
+                    "Very High"
+                } else if s >= 60.0 {
+                    "High"
+                } else if s >= 40.0 {
+                    "Medium"
+                } else {
+                    "Low"
+                };
                 (s, r.to_string())
             } else {
                 (50.0, "Medium".to_string())
@@ -137,7 +162,15 @@ pub fn calculate_relevance_score(
         }
     }
 
-    let definition_patterns = ["fn ", "def ", "function ", "class ", "struct ", "impl ", "trait "];
+    let definition_patterns = [
+        "fn ",
+        "def ",
+        "function ",
+        "class ",
+        "struct ",
+        "impl ",
+        "trait ",
+    ];
     for pattern in &definition_patterns {
         if line.contains(pattern) {
             score += 15.0;
@@ -167,15 +200,7 @@ mod tests {
         let regex = Arc::new(Regex::new(r"test").unwrap());
 
         // Test fuzzy search
-        let result = search_in_file_parallel(
-            &file_path,
-            &regex,
-            true,
-            0.0,
-            "test",
-            100,
-            false,
-        );
+        let result = search_in_file_parallel(&file_path, &regex, true, 0.0, "test", 100, false);
 
         assert!(result.is_ok());
         let results = result.unwrap();
@@ -189,7 +214,7 @@ mod tests {
         let query = "test";
 
         let matcher = SkimMatcherV2::default();
-        if let Some((score, indices)) = matcher.fuzzy_indices(line, query) {
+        if let Some((_score, indices)) = matcher.fuzzy_indices(line, query) {
             // Collect characters once (as done in the optimized version)
             let line_chars: Vec<char> = line.chars().collect();
 

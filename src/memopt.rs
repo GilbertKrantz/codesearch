@@ -18,7 +18,7 @@ impl FileReader {
     pub fn new(path: &Path) -> Result<Self, Box<dyn std::error::Error>> {
         let file = File::open(path)?;
         let metadata = file.metadata()?;
-        
+
         if metadata.len() > LARGE_FILE_THRESHOLD {
             let mmap = unsafe { Mmap::map(&file)? };
             Ok(FileReader::Mapped(mmap))
@@ -34,7 +34,13 @@ impl FileReader {
             }
             FileReader::Mapped(mmap) => {
                 let content = String::from_utf8_lossy(mmap);
-                Box::new(content.lines().map(|s| s.to_string()).collect::<Vec<_>>().into_iter())
+                Box::new(
+                    content
+                        .lines()
+                        .map(|s| s.to_string())
+                        .collect::<Vec<_>>()
+                        .into_iter(),
+                )
             }
         }
     }
@@ -137,7 +143,7 @@ impl StreamingSearcher {
 
         for line in reader.read_lines() {
             line_number += 1;
-            
+
             if self.results.len() >= self.max_results {
                 break;
             }
@@ -165,10 +171,10 @@ mod tests {
     fn test_file_reader_small_file() {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "line 1\nline 2\nline 3").unwrap();
-        
+
         let mut reader = FileReader::new(file.path()).unwrap();
         let lines: Vec<String> = reader.read_lines().collect();
-        
+
         assert_eq!(lines.len(), 3);
     }
 
@@ -176,13 +182,13 @@ mod tests {
     fn test_streaming_searcher() {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "fn main() {{\n    println!(\"test\");\n}}").unwrap();
-        
+
         let pattern = regex::Regex::new(r"fn\s+\w+").unwrap();
         let mut searcher = StreamingSearcher::new(pattern, 10);
-        
+
         searcher.search_file(file.path()).unwrap();
         let results = searcher.get_results();
-        
+
         assert_eq!(results.len(), 1);
         assert!(results[0].1.contains("fn main"));
     }
@@ -191,11 +197,11 @@ mod tests {
     fn test_search_pattern() {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "fn test1() {{}}\nfn test2() {{}}\nfn test3() {{}}").unwrap();
-        
+
         let mut reader = FileReader::new(file.path()).unwrap();
         let pattern = regex::Regex::new(r"fn\s+\w+").unwrap();
         let results = reader.search_pattern(&pattern, 2);
-        
+
         assert_eq!(results.len(), 2);
     }
 }

@@ -74,7 +74,7 @@ pub fn analyze_codebase(
 
     println!("{}", "Languages".yellow().bold());
     let mut lang_vec: Vec<_> = language_stats.iter().collect();
-    lang_vec.sort_by(|a, b| b.1 .1.cmp(&a.1 .1));
+    lang_vec.sort_by(|a, b| b.1.1.cmp(&a.1.1));
 
     for (ext, (file_count, lines, bytes)) in lang_vec.iter().take(10) {
         let lang_name = get_language_by_extension(ext)
@@ -92,7 +92,10 @@ pub fn analyze_codebase(
     println!();
 
     println!("{}", "Code Patterns".yellow().bold());
-    println!("  Functions/Methods: {}", function_count.to_string().green());
+    println!(
+        "  Functions/Methods: {}",
+        function_count.to_string().green()
+    );
     println!("  Classes/Structs: {}", class_count.to_string().green());
     println!("  Comment lines: {}", comment_lines.to_string().green());
 
@@ -117,7 +120,12 @@ fn count_generic_functions(content: &str) -> usize {
 }
 
 fn count_generic_classes(content: &str) -> usize {
-    let patterns = [r"class\s+\w+", r"struct\s+\w+", r"interface\s+\w+", r"trait\s+\w+"];
+    let patterns = [
+        r"class\s+\w+",
+        r"struct\s+\w+",
+        r"interface\s+\w+",
+        r"trait\s+\w+",
+    ];
     patterns
         .iter()
         .filter_map(|p| Regex::new(p).ok())
@@ -178,23 +186,39 @@ pub fn suggest_refactoring(
     suggestions.sort_by(|a, b| b.priority.cmp(&a.priority));
 
     let filtered_suggestions = if high_priority_only {
-        suggestions.into_iter().filter(|s| s.priority >= 7).collect::<Vec<_>>()
+        suggestions
+            .into_iter()
+            .filter(|s| s.priority >= 7)
+            .collect::<Vec<_>>()
     } else {
         suggestions
     };
 
     if filtered_suggestions.is_empty() {
-        println!("{}", "No refactoring suggestions found! Your code looks good.".green().italic());
+        println!(
+            "{}",
+            "No refactoring suggestions found! Your code looks good."
+                .green()
+                .italic()
+        );
         return Ok(());
     }
 
     let mut grouped: HashMap<String, Vec<&RefactorSuggestion>> = HashMap::new();
     for suggestion in &filtered_suggestions {
-        grouped.entry(suggestion.suggestion_type.clone()).or_default().push(suggestion);
+        grouped
+            .entry(suggestion.suggestion_type.clone())
+            .or_default()
+            .push(suggestion);
     }
 
     for (suggestion_type, type_suggestions) in grouped {
-        println!("{}", format!("📋 {} ({})", suggestion_type, type_suggestions.len()).yellow().bold());
+        println!(
+            "{}",
+            format!("📋 {} ({})", suggestion_type, type_suggestions.len())
+                .yellow()
+                .bold()
+        );
 
         for suggestion in type_suggestions {
             let priority_color = match suggestion.priority {
@@ -205,18 +229,29 @@ pub fn suggest_refactoring(
 
             println!(
                 "  {} {} {}",
-                format!("[{}]", suggestion.priority).color(priority_color).bold(),
+                format!("[{}]", suggestion.priority)
+                    .color(priority_color)
+                    .bold(),
                 suggestion.file.blue().bold(),
                 format!("line {}", suggestion.line_number).cyan()
             );
             println!("  {}", suggestion.description.italic());
-            println!("  {} {}", "Current:".dimmed(), suggestion.code_snippet.dimmed());
+            println!(
+                "  {} {}",
+                "Current:".dimmed(),
+                suggestion.code_snippet.dimmed()
+            );
             println!("  {} {}", "Better:".green(), suggestion.improvement.green());
             println!();
         }
     }
 
-    println!("{}", format!("Total suggestions: {}", filtered_suggestions.len()).cyan().bold());
+    println!(
+        "{}",
+        format!("Total suggestions: {}", filtered_suggestions.len())
+            .cyan()
+            .bold()
+    );
 
     Ok(())
 }
@@ -315,14 +350,42 @@ pub fn list_supported_languages() -> Result<(), Box<dyn std::error::Error>> {
 
     let categories: Vec<(&str, Vec<&str>)> = vec![
         ("Systems", vec!["Rust", "C", "C++", "Zig", "V", "Nim"]),
-        ("Web", vec!["JavaScript", "TypeScript", "PHP", "CSS", "XML/HTML"]),
-        ("Backend", vec!["Python", "Java", "Go", "Kotlin", "C#", "Ruby", "Scala"]),
+        (
+            "Web",
+            vec!["JavaScript", "TypeScript", "PHP", "CSS", "XML/HTML"],
+        ),
+        (
+            "Backend",
+            vec!["Python", "Java", "Go", "Kotlin", "C#", "Ruby", "Scala"],
+        ),
         ("Mobile", vec!["Swift", "Objective-C", "Dart"]),
-        ("Functional", vec!["Haskell", "Elixir", "Erlang", "Clojure", "OCaml", "F#"]),
-        ("Scripting", vec!["Shell", "PowerShell", "Lua", "Perl", "R", "Julia"]),
-        ("Data/Config", vec!["SQL", "YAML", "TOML", "JSON", "GraphQL", "Protobuf"]),
-        ("Infrastructure", vec!["Dockerfile", "Terraform", "Makefile"]),
-        ("Other", vec!["Assembly", "Groovy", "Crystal", "Solidity", "WebAssembly", "Markdown"]),
+        (
+            "Functional",
+            vec!["Haskell", "Elixir", "Erlang", "Clojure", "OCaml", "F#"],
+        ),
+        (
+            "Scripting",
+            vec!["Shell", "PowerShell", "Lua", "Perl", "R", "Julia"],
+        ),
+        (
+            "Data/Config",
+            vec!["SQL", "YAML", "TOML", "JSON", "GraphQL", "Protobuf"],
+        ),
+        (
+            "Infrastructure",
+            vec!["Dockerfile", "Terraform", "Makefile"],
+        ),
+        (
+            "Other",
+            vec![
+                "Assembly",
+                "Groovy",
+                "Crystal",
+                "Solidity",
+                "WebAssembly",
+                "Markdown",
+            ],
+        ),
     ];
 
     for (category, category_langs) in &categories {
@@ -330,14 +393,27 @@ pub fn list_supported_languages() -> Result<(), Box<dyn std::error::Error>> {
         for lang_name in category_langs {
             if let Some(lang) = languages.iter().find(|l| l.name == *lang_name) {
                 let exts = lang.extensions.join(", ");
-                println!("   {} {} ({})", "•".dimmed(), lang.name.green(), exts.dimmed());
+                println!(
+                    "   {} {} ({})",
+                    "•".dimmed(),
+                    lang.name.green(),
+                    exts.dimmed()
+                );
             }
         }
         println!();
     }
 
-    let total = categories.iter().flat_map(|(_, langs)| langs.iter()).count();
-    println!("{}", format!("Total: {} languages supported", total).cyan().bold());
+    let total = categories
+        .iter()
+        .flat_map(|(_, langs)| langs.iter())
+        .count();
+    println!(
+        "{}",
+        format!("Total: {} languages supported", total)
+            .cyan()
+            .bold()
+    );
 
     Ok(())
 }

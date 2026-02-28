@@ -67,21 +67,21 @@ pub enum CalculatorError {
 /// Main function demonstrating calculator usage
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut calc = Calculator::new();
-    
+
     // Perform some calculations
     let sum = calc.add(5.0, 3.0);
     let product = calc.multiply(4.0, 7.0);
     let fact = calc.factorial(5);
-    
+
     println!("Sum: {sum}");
     println!("Product: {product}");
     println!("Factorial: {fact}");
-    
+
     // Print history
     for entry in calc.get_history() {
         println!("History: {entry}");
     }
-    
+
     Ok(())
 }
 

@@ -12,16 +12,16 @@
 
 pub mod analysis;
 pub mod ast;
-pub mod extract;
 pub mod cache;
+pub mod cache_lru;
 pub mod callgraph;
 pub mod cfg;
-pub mod cli;
-pub mod commands;
-pub mod codemetrics;
 pub mod circular;
 #[cfg(test)]
 mod circular_tests;
+pub mod cli;
+pub mod codemetrics;
+pub mod commands;
 pub mod complexity;
 #[cfg(test)]
 mod complexity_tests;
@@ -30,14 +30,14 @@ pub mod depgraph;
 pub mod designmetrics;
 pub mod dfg;
 pub mod duplicates;
-pub mod cache_lru;
 pub mod errors;
 pub mod export;
+pub mod extract;
 pub mod find;
 pub mod fs;
 pub mod githistory;
-pub mod health;
 pub mod graphs;
+pub mod health;
 pub mod index;
 pub mod interactive;
 pub mod language;
@@ -48,42 +48,63 @@ pub mod parser;
 pub mod pdg;
 pub mod remote;
 pub mod search;
-pub mod traits;
 #[cfg(test)]
 mod search_tests;
+pub mod security;
+pub mod traits;
 pub mod types;
+pub mod unified;
 pub mod watcher;
 
 // Re-export commonly used items at the crate root
-pub use search::{list_files, print_results, print_search_stats, search_code};
-pub use types::{ComplexityMetrics, DuplicateBlock, FileInfo, Match, RefactorSuggestion, SearchResult};
 pub use analysis::analyze_codebase;
 pub use ast::{
-    analyze_file, get_syntax_edges, AstAnalysis, AstParser, AstSyntaxEdge, ClassInfo, FunctionInfo,
-    SyntaxRelationshipType,
+    AstAnalysis, AstParser, AstSyntaxEdge, ClassInfo, FunctionInfo, SyntaxRelationshipType,
+    analyze_file, get_syntax_edges,
 };
-pub use callgraph::{build_call_graph, CallGraph, CallNode};
-pub use cfg::{analyze_file_cfg, build_cfg_from_source, ControlFlowGraph, BasicBlock};
-pub use codemetrics::{analyze_file_metrics, analyze_project_metrics, print_metrics_report, FileMetrics, ProjectMetrics};
-pub use complexity::{calculate_file_complexity, calculate_cyclomatic_complexity, calculate_cognitive_complexity};
-pub use circular::{detect_circular_calls, find_circular_calls, CircularCall};
-pub use deadcode::{detect_dead_code, find_dead_code, DeadCodeItem};
-pub use extract::{extract_classes, extract_function_calls, extract_functions, extract_identifier_references};
-pub use depgraph::{build_dependency_graph, DependencyGraph, DependencyNode};
-pub use designmetrics::{analyze_design_metrics, print_design_metrics, DesignMetrics, ModuleMetrics};
-pub use dfg::{analyze_file_dfg, build_dfg_from_source, DataFlowGraph, DfgNode};
+pub use callgraph::{CallGraph, CallNode, build_call_graph};
+pub use cfg::{BasicBlock, ControlFlowGraph, analyze_file_cfg, build_cfg_from_source};
+pub use circular::{CircularCall, detect_circular_calls, find_circular_calls};
+pub use codemetrics::{
+    FileMetrics, ProjectMetrics, analyze_file_metrics, analyze_project_metrics,
+    print_metrics_report,
+};
+pub use complexity::{
+    calculate_cognitive_complexity, calculate_cyclomatic_complexity, calculate_file_complexity,
+};
+pub use deadcode::{DeadCodeItem, detect_dead_code, find_dead_code};
+pub use depgraph::{DependencyGraph, DependencyNode, build_dependency_graph};
+pub use designmetrics::{
+    DesignMetrics, ModuleMetrics, analyze_design_metrics, print_design_metrics,
+};
+pub use dfg::{DataFlowGraph, DfgNode, analyze_file_dfg, build_dfg_from_source};
 pub use duplicates::{detect_duplicates, find_duplicates};
-pub use find::{find_symbol, FindReport, FindResult, FindType, print_find_report};
-pub use githistory::{search_git_history, GitSearcher, GitSearchResult, CommitInfo};
-pub use health::{print_health_report, scan_health, HealthReport};
-pub use graphs::{GraphAnalyzer, GraphAnalysisResult, GraphType};
+pub use extract::{
+    extract_classes, extract_function_calls, extract_functions, extract_identifier_references,
+};
+pub use find::{FindReport, FindResult, FindType, find_symbol, print_find_report};
+pub use githistory::{CommitInfo, GitSearchResult, GitSearcher, search_git_history};
+pub use graphs::{GraphAnalysisResult, GraphAnalyzer, GraphType};
+pub use health::{HealthReport, print_health_report, scan_health};
 pub use index::{CodeIndex, IndexEntry, IndexStats};
-pub use language::{get_supported_languages, LanguageInfo};
+pub use language::{LanguageInfo, get_supported_languages};
 pub use memopt::{FileReader, StreamingSearcher};
-pub use pdg::{analyze_file_pdg, build_pdg_from_source, ProgramDependencyGraph};
-pub use remote::{search_remote_repository, RemoteSearcher, RemoteSearchResult};
-pub use watcher::{start_watching, FileWatcher};
+pub use pdg::{ProgramDependencyGraph, analyze_file_pdg, build_pdg_from_source};
+pub use remote::{RemoteSearchResult, RemoteSearcher, search_remote_repository};
+pub use search::{list_files, print_results, print_search_stats, search_code};
+pub use security::{
+    SecurityFinding, SecurityKind, Severity, print_security_report, scan_security_patterns,
+};
+pub use types::{
+    ComplexityMetrics, DuplicateBlock, FileInfo, Match, RefactorSuggestion, SearchResult,
+};
+pub use unified::{
+    EdgeCategory, UnifiedEdge, UnifiedGraph, build_unified_graph, trace_data_flow_forward,
+    trace_data_flow_in_path,
+};
+pub use watcher::{FileWatcher, start_watching};
 
 // Re-export fs utilities
-pub use fs::{FileSystem, RealFileSystem, MockFileSystem, WalkOptions, create_filtered_walker, collect_files};
-
+pub use fs::{
+    FileSystem, MockFileSystem, RealFileSystem, WalkOptions, collect_files, create_filtered_walker,
+};

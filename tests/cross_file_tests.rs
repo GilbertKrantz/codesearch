@@ -120,7 +120,7 @@ fn test_example() {
 #[test]
 fn test_search_across_multiple_files() {
     let temp_dir = create_multi_file_structure();
-    
+
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         ..Default::default()
@@ -129,16 +129,19 @@ fn test_search_across_multiple_files() {
 
     // Should find "function" in multiple files
     assert!(!results.is_empty());
-    
+
     // Verify results span multiple files
     let unique_files: std::collections::HashSet<_> = results.iter().map(|r| &r.file).collect();
-    assert!(unique_files.len() > 1, "Should find matches in multiple files");
+    assert!(
+        unique_files.len() > 1,
+        "Should find matches in multiple files"
+    );
 }
 
 #[test]
 fn test_search_across_nested_folders() {
     let temp_dir = create_multi_file_structure();
-    
+
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         ..Default::default()
@@ -147,26 +150,34 @@ fn test_search_across_nested_folders() {
 
     // Should find TODO and FIXME across different folders
     assert!(!results.is_empty());
-    
+
     // Verify results include files from different directories
     let has_module_a = results.iter().any(|r| r.file.contains("module_a"));
     let has_module_b = results.iter().any(|r| r.file.contains("module_b"));
-    assert!(has_module_a || has_module_b, "Should find matches in nested folders");
+    assert!(
+        has_module_a || has_module_b,
+        "Should find matches in nested folders"
+    );
 }
 
 #[test]
 fn test_list_files_recursive() {
     let temp_dir = create_multi_file_structure();
-    
+
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         ..Default::default()
     };
-    let files = codesearch::search::list_files(temp_dir.path(), options.extensions.as_deref(), options.exclude.as_deref()).unwrap();
+    let files = codesearch::search::list_files(
+        temp_dir.path(),
+        options.extensions.as_deref(),
+        options.exclude.as_deref(),
+    )
+    .unwrap();
 
     // Should find all .rs files recursively
     assert!(files.len() >= 5, "Should find at least 5 .rs files");
-    
+
     // Verify files from different folders
     let file_paths: Vec<_> = files.iter().map(|f| &f.path).collect();
     assert!(file_paths.iter().any(|p| p.contains("module_a")));
@@ -177,30 +188,44 @@ fn test_list_files_recursive() {
 #[test]
 fn test_list_files_with_exclude() {
     let temp_dir = create_multi_file_structure();
-    
+
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         exclude: Some(vec![String::from("tests")]),
         ..Default::default()
     };
-    let files = codesearch::search::list_files(temp_dir.path(), options.extensions.as_deref(), options.exclude.as_deref()).unwrap();
+    let files = codesearch::search::list_files(
+        temp_dir.path(),
+        options.extensions.as_deref(),
+        options.exclude.as_deref(),
+    )
+    .unwrap();
 
     // Should exclude the tests folder
     let file_paths: Vec<_> = files.iter().map(|f| &f.path).collect();
     assert!(!file_paths.iter().any(|p| p.contains("tests")));
-    assert!(file_paths.iter().any(|p| p.contains("module_a") || p.contains("module_b")));
+    assert!(
+        file_paths
+            .iter()
+            .any(|p| p.contains("module_a") || p.contains("module_b"))
+    );
 }
 
 #[test]
 fn test_circular_detection_across_files() {
     let temp_dir = create_multi_file_structure();
-    
+
     // function_a -> function_b -> function_c -> function_a (circular across 3 files)
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         ..Default::default()
     };
-    let cycles = codesearch::circular::find_circular_calls(temp_dir.path(), options.extensions.as_deref(), options.exclude.as_deref()).unwrap();
+    let cycles = codesearch::circular::find_circular_calls(
+        temp_dir.path(),
+        options.extensions.as_deref(),
+        options.exclude.as_deref(),
+    )
+    .unwrap();
 
     // Should detect the circular dependency across files
     assert!(!cycles.is_empty(), "Should find at least one cycle");
@@ -214,13 +239,17 @@ fn test_circular_detection_across_files() {
 #[test]
 fn test_deadcode_detection_across_files() {
     let temp_dir = create_multi_file_structure();
-    
+
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         ..Default::default()
     };
-    let result = codesearch::deadcode::detect_dead_code(temp_dir.path(), options.extensions.as_deref(), options.exclude.as_deref());
-    
+    let result = codesearch::deadcode::detect_dead_code(
+        temp_dir.path(),
+        options.extensions.as_deref(),
+        options.exclude.as_deref(),
+    );
+
     // Should successfully analyze for dead code across files
     assert!(result.is_ok());
 }
@@ -228,31 +257,46 @@ fn test_deadcode_detection_across_files() {
 #[test]
 fn test_duplicate_detection_across_files() {
     let temp_dir = create_multi_file_structure();
-    
+
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         ..Default::default()
     };
-    let duplicates = codesearch::duplicates::find_duplicates(temp_dir.path(), options.extensions.as_deref(), options.exclude.as_deref(), 3, 0.9).unwrap();
+    let duplicates = codesearch::duplicates::find_duplicates(
+        temp_dir.path(),
+        options.extensions.as_deref(),
+        options.exclude.as_deref(),
+        3,
+        0.9,
+    )
+    .unwrap();
 
     // Should find duplicate_logic in file2.rs and file3.rs
     if !duplicates.is_empty() {
         // Verify duplicates are in different files
-        assert_ne!(duplicates[0].file1, duplicates[0].file2, "Duplicates should be in different files");
+        assert_ne!(
+            duplicates[0].file1, duplicates[0].file2,
+            "Duplicates should be in different files"
+        );
     }
 }
 
 #[test]
 fn test_complexity_analysis_across_folders() {
     let temp_dir = create_multi_file_structure();
-    
+
     // Get all files and calculate complexity for each
     let options = codesearch::types::SearchOptions {
         extensions: Some(vec![String::from("rs")]),
         ..Default::default()
     };
-    let files = codesearch::search::list_files(temp_dir.path(), options.extensions.as_deref(), options.exclude.as_deref()).unwrap();
-    
+    let files = codesearch::search::list_files(
+        temp_dir.path(),
+        options.extensions.as_deref(),
+        options.exclude.as_deref(),
+    )
+    .unwrap();
+
     let mut metrics = Vec::new();
     for file in &files {
         if let Ok(content) = std::fs::read_to_string(&file.path) {
@@ -263,7 +307,7 @@ fn test_complexity_analysis_across_folders() {
 
     // Should analyze complexity across all files
     assert!(!metrics.is_empty(), "Should analyze files across folders");
-    
+
     // Verify analysis covers multiple files
     let unique_files: std::collections::HashSet<_> = metrics.iter().map(|m| &m.file_path).collect();
     assert!(unique_files.len() > 1, "Should analyze multiple files");
@@ -280,19 +324,26 @@ fn test_search_with_multiple_extensions() {
     fs::write(base.join("file3.js"), "function js_function() {}").unwrap();
 
     let options = codesearch::types::SearchOptions {
-        extensions: Some(vec![String::from("rs"), String::from("py"), String::from("js")]),
+        extensions: Some(vec![
+            String::from("rs"),
+            String::from("py"),
+            String::from("js"),
+        ]),
         ..Default::default()
     };
     let results = codesearch::search::search_code("function", base, &options).unwrap();
 
     // Should find "function" in all three file types
     assert!(!results.is_empty());
-    
+
     let unique_extensions: std::collections::HashSet<_> = results
         .iter()
         .filter_map(|r| std::path::Path::new(&r.file).extension())
         .collect();
-    assert!(unique_extensions.len() >= 2, "Should search across multiple file types");
+    assert!(
+        unique_extensions.len() >= 2,
+        "Should search across multiple file types"
+    );
 }
 
 #[test]
@@ -330,11 +381,10 @@ fn test_cross_folder_with_symlinks() {
     fs::write(base.join("real_folder/file.rs"), "fn test() {}").unwrap();
 
     // Try to search - should handle gracefully even if symlinks exist
-    let result = codesearch::search::list_files(
-        base,
-        Some(&[String::from("rs")]),
-        None,
-    );
+    let result = codesearch::search::list_files(base, Some(&[String::from("rs")]), None);
 
-    assert!(result.is_ok(), "Should handle directory traversal gracefully");
+    assert!(
+        result.is_ok(),
+        "Should handle directory traversal gracefully"
+    );
 }

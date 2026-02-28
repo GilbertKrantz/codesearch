@@ -69,7 +69,13 @@ impl DataFlowGraph {
         self.nodes.insert(node.id, node);
     }
 
-    pub fn add_edge(&mut self, from: usize, to: usize, edge_type: DataFlowType, label: Option<String>) {
+    pub fn add_edge(
+        &mut self,
+        from: usize,
+        to: usize,
+        edge_type: DataFlowType,
+        label: Option<String>,
+    ) {
         self.edges.push(DfgEdge {
             from,
             to,
@@ -140,7 +146,10 @@ impl DataFlowGraph {
         for (id, node) in &self.nodes {
             if node.node_type == DfgNodeType::Operation {
                 if let Some(def) = &node.definition {
-                    operations.entry(def.clone()).or_insert_with(Vec::new).push(*id);
+                    operations
+                        .entry(def.clone())
+                        .or_insert_with(Vec::new)
+                        .push(*id);
                 }
             }
         }
@@ -182,7 +191,11 @@ impl DataFlowGraph {
         dot.push_str("\n");
 
         for edge in &self.edges {
-            let label = edge.label.as_ref().map(|l| format!(" [label=\"{}\"]", l)).unwrap_or_default();
+            let label = edge
+                .label
+                .as_ref()
+                .map(|l| format!(" [label=\"{}\"]", l))
+                .unwrap_or_default();
             let style = match edge.edge_type {
                 DataFlowType::Definition => " [color=blue]",
                 DataFlowType::Use => " [color=green]",
@@ -191,7 +204,10 @@ impl DataFlowGraph {
                 DataFlowType::Return => " [style=dotted]",
             };
 
-            dot.push_str(&format!("  {} -> {}{}{};\n", edge.from, edge.to, label, style));
+            dot.push_str(&format!(
+                "  {} -> {}{}{};\n",
+                edge.from, edge.to, label, style
+            ));
         }
 
         dot.push_str("}\n");
@@ -199,7 +215,11 @@ impl DataFlowGraph {
     }
 }
 
-pub fn build_dfg_from_source(content: &str, function_name: &str, file_path: &str) -> Result<DataFlowGraph, Box<dyn std::error::Error>> {
+pub fn build_dfg_from_source(
+    content: &str,
+    function_name: &str,
+    file_path: &str,
+) -> Result<DataFlowGraph, Box<dyn std::error::Error>> {
     let mut dfg = DataFlowGraph::new(function_name.to_string(), file_path.to_string());
     let mut node_id = 0;
     let mut variable_map: HashMap<String, usize> = HashMap::new();
@@ -211,9 +231,11 @@ pub fn build_dfg_from_source(content: &str, function_name: &str, file_path: &str
     for (idx, line) in lines.iter().enumerate() {
         let trimmed = line.trim();
 
-        if !in_function && (trimmed.contains(&format!("fn {}", function_name))
-            || trimmed.contains(&format!("def {}", function_name))
-            || trimmed.contains(&format!("function {}", function_name))) {
+        if !in_function
+            && (trimmed.contains(&format!("fn {}", function_name))
+                || trimmed.contains(&format!("def {}", function_name))
+                || trimmed.contains(&format!("function {}", function_name)))
+        {
             in_function = true;
 
             let param_pattern = regex::Regex::new(r"\(([^)]*)\)")?;
@@ -250,7 +272,8 @@ pub fn build_dfg_from_source(content: &str, function_name: &str, file_path: &str
                 }
             }
 
-            let assignment_pattern = regex::Regex::new(r"(?:let|const|var|mut)?\s*(\w+)\s*=\s*(.+?)(?:;|$)")?;
+            let assignment_pattern =
+                regex::Regex::new(r"(?:let|const|var|mut)?\s*(\w+)\s*=\s*(.+?)(?:;|$)")?;
             if let Some(caps) = assignment_pattern.captures(trimmed) {
                 if let (Some(var_name), Some(expr)) = (caps.get(1), caps.get(2)) {
                     let var_name_str = var_name.as_str();
@@ -316,7 +339,9 @@ pub fn analyze_file_dfg(path: &Path) -> Result<Vec<DataFlowGraph>, Box<dyn std::
 
     for cap in function_pattern.captures_iter(&content) {
         if let Some(func_name) = cap.get(1) {
-            if let Ok(dfg) = build_dfg_from_source(&content, func_name.as_str(), &path.to_string_lossy()) {
+            if let Ok(dfg) =
+                build_dfg_from_source(&content, func_name.as_str(), &path.to_string_lossy())
+            {
                 dfgs.push(dfg);
             }
         }
@@ -353,7 +378,7 @@ mod tests {
     #[test]
     fn test_find_variable_uses() {
         let mut dfg = DataFlowGraph::new("test".to_string(), "test.rs".to_string());
-        
+
         dfg.add_node(DfgNode {
             id: 0,
             node_type: DfgNodeType::Variable,
@@ -361,7 +386,7 @@ mod tests {
             line: 1,
             definition: Some("5".to_string()),
         });
-        
+
         dfg.add_node(DfgNode {
             id: 1,
             node_type: DfgNodeType::Variable,
@@ -369,7 +394,7 @@ mod tests {
             line: 2,
             definition: None,
         });
-        
+
         let uses = dfg.find_variable_uses("x");
         assert_eq!(uses.len(), 2);
     }
@@ -377,7 +402,7 @@ mod tests {
     #[test]
     fn test_find_unused_variables() {
         let mut dfg = DataFlowGraph::new("test".to_string(), "test.rs".to_string());
-        
+
         dfg.add_node(DfgNode {
             id: 0,
             node_type: DfgNodeType::Variable,
@@ -385,7 +410,7 @@ mod tests {
             line: 1,
             definition: Some("5".to_string()),
         });
-        
+
         dfg.add_node(DfgNode {
             id: 1,
             node_type: DfgNodeType::Variable,
@@ -393,9 +418,9 @@ mod tests {
             line: 2,
             definition: Some("10".to_string()),
         });
-        
+
         dfg.add_edge(1, 2, DataFlowType::Use, None);
-        
+
         let unused = dfg.find_unused_variables();
         assert!(unused.contains(&"unused".to_string()));
     }

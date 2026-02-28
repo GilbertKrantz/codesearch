@@ -204,19 +204,10 @@ mod tests {
     fn test_find_circular_calls_with_temp_files() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("test.rs");
-        fs::write(
-            &path,
-            "fn a() { b(); }\nfn b() { a(); }",
-        )
-        .unwrap();
+        fs::write(&path, "fn a() { b(); }\nfn b() { a(); }").unwrap();
         let parent = path.parent().unwrap();
 
-        let cycles = find_circular_calls(
-            parent,
-            Some(&["rs".to_string()]),
-            None,
-        )
-        .unwrap();
+        let cycles = find_circular_calls(parent, Some(&["rs".to_string()]), None).unwrap();
         assert!(!cycles.is_empty(), "should find at least one cycle");
         let ab_cycle = cycles
             .iter()

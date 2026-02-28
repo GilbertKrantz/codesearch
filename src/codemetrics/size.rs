@@ -46,10 +46,10 @@ impl SizeMetrics {
 
 pub fn calculate_size_metrics(content: &str, ext: &str) -> SizeMetrics {
     let mut metrics = SizeMetrics::new();
-    
+
     let lines: Vec<&str> = content.lines().collect();
     metrics.total_lines = lines.len();
-    
+
     let is_comment_line = |line: &str, ext: &str| -> bool {
         let trimmed = line.trim();
         match ext {
@@ -60,52 +60,52 @@ pub fn calculate_size_metrics(content: &str, ext: &str) -> SizeMetrics {
             _ => false,
         }
     };
-    
+
     let is_logical_line = |line: &str, ext: &str| -> bool {
         let trimmed = line.trim();
         if trimmed.is_empty() || is_comment_line(line, ext) {
             return false;
         }
-        
+
         match ext {
             "rs" | "c" | "cpp" | "java" | "js" | "ts" | "go" | "kt" => {
-                trimmed.ends_with(';') || 
-                trimmed.contains("if ") || 
-                trimmed.contains("for ") ||
-                trimmed.contains("while ") ||
-                trimmed.contains("return")
+                trimmed.ends_with(';')
+                    || trimmed.contains("if ")
+                    || trimmed.contains("for ")
+                    || trimmed.contains("while ")
+                    || trimmed.contains("return")
             }
             "py" => {
-                !trimmed.ends_with(':') && 
-                (trimmed.contains('=') || 
-                 trimmed.starts_with("return") ||
-                 trimmed.starts_with("if ") ||
-                 trimmed.starts_with("for "))
+                !trimmed.ends_with(':')
+                    && (trimmed.contains('=')
+                        || trimmed.starts_with("return")
+                        || trimmed.starts_with("if ")
+                        || trimmed.starts_with("for "))
             }
             _ => !trimmed.is_empty(),
         }
     };
-    
+
     for line in &lines {
         let trimmed = line.trim();
-        
+
         if trimmed.is_empty() {
             metrics.blank_lines += 1;
         } else if is_comment_line(line, ext) {
             metrics.comment_lines += 1;
         } else {
             metrics.source_lines += 1;
-            
+
             if is_logical_line(line, ext) {
                 metrics.logical_lines += 1;
             }
         }
     }
-    
+
     metrics.num_classes = crate::codemetrics::helpers::count_classes(content, ext);
     metrics.num_functions = crate::codemetrics::helpers::count_functions(content, ext);
     metrics.num_methods = metrics.num_functions;
-    
+
     metrics.calculate_ratios();
     metrics
 }

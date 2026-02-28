@@ -166,6 +166,9 @@ cache/
 tmp/
 temp/
 
+# CodeSearch index/cache
+.codesearch/
+
 # IDE specific files
 *.sublime-project
 *.sublime-workspace

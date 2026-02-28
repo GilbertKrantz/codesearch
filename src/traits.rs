@@ -6,7 +6,7 @@ use crate::types::{SearchOptions, SearchResult};
 use std::path::Path;
 
 /// Trait for search engine implementations
-/// 
+///
 /// This trait allows different search strategies to be implemented and tested independently.
 /// It enables dependency injection and makes the code more testable by allowing mock implementations.
 ///
@@ -20,7 +20,7 @@ use std::path::Path;
 /// struct MockSearchEngine;
 ///
 /// impl SearchEngine for MockSearchEngine {
-///     fn search(&self, query: &str, path: &Path, options: &SearchOptions) 
+///     fn search(&self, query: &str, path: &Path, options: &SearchOptions)
 ///         -> Result<Vec<SearchResult>, Box<dyn std::error::Error>> {
 ///         // Return mock results for testing
 ///         Ok(vec![])
@@ -63,7 +63,7 @@ pub trait SearchEngine: Send + Sync {
 /// impl Analyzer for MockAnalyzer {
 ///     type Output = String;
 ///     
-///     fn analyze(&self, path: &Path, extensions: Option<&[String]>) 
+///     fn analyze(&self, path: &Path, extensions: Option<&[String]>)
 ///         -> Result<Self::Output, Box<dyn std::error::Error>> {
 ///         Ok("Mock analysis".to_string())
 ///     }
@@ -154,9 +154,7 @@ mod tests {
 
     #[test]
     fn test_mock_search_engine() {
-        let engine = MockSearchEngine {
-            results: vec![],
-        };
+        let engine = MockSearchEngine { results: vec![] };
         let options = SearchOptions::default();
         let result = engine.search("test", Path::new("."), &options);
         assert!(result.is_ok());

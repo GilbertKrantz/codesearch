@@ -231,10 +231,8 @@ mod tests {
 
     #[test]
     fn test_workspace_with_custom_files() {
-        let workspace = TestWorkspace::with_files(&[
-            ("test1.txt", "content1"),
-            ("test2.txt", "content2"),
-        ]);
+        let workspace =
+            TestWorkspace::with_files(&[("test1.txt", "content1"), ("test2.txt", "content2")]);
         assert_eq!(workspace.files.len(), 2);
     }
 

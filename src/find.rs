@@ -6,8 +6,8 @@ use crate::callgraph::build_call_graph;
 use crate::extract::{extract_classes, extract_functions};
 use crate::parser::read_file_content;
 use crate::search::list_files;
-use crate::types::SearchOptions;
 use crate::search::search_code;
+use crate::types::SearchOptions;
 use serde::Serialize;
 use std::path::Path;
 
@@ -51,7 +51,11 @@ pub fn find_symbol(
 
             for (name, line) in extract_functions(&content, &path_str) {
                 if name == symbol {
-                    let line_content = content.lines().nth(line.saturating_sub(1)).unwrap_or("").trim();
+                    let line_content = content
+                        .lines()
+                        .nth(line.saturating_sub(1))
+                        .unwrap_or("")
+                        .trim();
                     definitions.push(FindResult {
                         kind: "FUNCTION".to_string(),
                         file: path_str.to_string(),
@@ -63,7 +67,11 @@ pub fn find_symbol(
             }
             for (name, line) in extract_classes(&content, &path_str) {
                 if name == symbol {
-                    let line_content = content.lines().nth(line.saturating_sub(1)).unwrap_or("").trim();
+                    let line_content = content
+                        .lines()
+                        .nth(line.saturating_sub(1))
+                        .unwrap_or("")
+                        .trim();
                     definitions.push(FindResult {
                         kind: "CLASS".to_string(),
                         file: path_str.to_string(),
@@ -171,26 +179,46 @@ pub fn print_find_report(report: &FindReport, find_type: FindType) {
     println!("{}", "─".repeat(40).cyan());
     println!();
 
-    if (find_type == FindType::Definition || find_type == FindType::All) && !report.definitions.is_empty() {
+    if (find_type == FindType::Definition || find_type == FindType::All)
+        && !report.definitions.is_empty()
+    {
         println!("{}", "DEFINITIONS".green().bold());
         for d in &report.definitions {
-            println!("  {} {}:{}", d.file.cyan(), d.line.to_string().yellow(), d.content);
+            println!(
+                "  {} {}:{}",
+                d.file.cyan(),
+                d.line.to_string().yellow(),
+                d.content
+            );
         }
         println!();
     }
 
-    if (find_type == FindType::Callers || find_type == FindType::All) && !report.callers.is_empty() {
+    if (find_type == FindType::Callers || find_type == FindType::All) && !report.callers.is_empty()
+    {
         println!("{}", "CALLERS".green().bold());
         for c in &report.callers {
-            println!("  {} {}:{}", c.file.cyan(), c.line.to_string().yellow(), c.content);
+            println!(
+                "  {} {}:{}",
+                c.file.cyan(),
+                c.line.to_string().yellow(),
+                c.content
+            );
         }
         println!();
     }
 
-    if (find_type == FindType::References || find_type == FindType::All) && !report.references.is_empty() {
+    if (find_type == FindType::References || find_type == FindType::All)
+        && !report.references.is_empty()
+    {
         println!("{}", "REFERENCES".green().bold());
         for r in &report.references {
-            println!("  {} {}:{}", r.file.cyan(), r.line.to_string().yellow(), r.content);
+            println!(
+                "  {} {}:{}",
+                r.file.cyan(),
+                r.line.to_string().yellow(),
+                r.content
+            );
         }
         println!();
     }

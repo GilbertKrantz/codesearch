@@ -56,7 +56,7 @@ impl GitSearcher {
 
             let oid = oid?;
             let commit = self.repo.find_commit(oid)?;
-            
+
             if let Ok(commit_results) = self.search_commit(&commit, &regex) {
                 results.extend(commit_results);
             }
@@ -82,22 +82,27 @@ impl GitSearcher {
         };
 
         let mut diff_opts = DiffOptions::new();
-        let diff = self.repo.diff_tree_to_tree(
-            parent_tree.as_ref(),
-            Some(&tree),
-            Some(&mut diff_opts),
-        )?;
+        let diff =
+            self.repo
+                .diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), Some(&mut diff_opts))?;
 
         diff.foreach(
             &mut |delta, _| {
                 if let Some(path) = delta.new_file().path() {
-                    if let Ok(blob) = tree.get_path(path).and_then(|entry| self.repo.find_blob(entry.id())) {
+                    if let Ok(blob) = tree
+                        .get_path(path)
+                        .and_then(|entry| self.repo.find_blob(entry.id()))
+                    {
                         if let Ok(content) = std::str::from_utf8(blob.content()) {
                             for (line_num, line) in content.lines().enumerate() {
                                 if regex.is_match(line) {
                                     results.push(GitSearchResult {
                                         commit_id: commit.id().to_string(),
-                                        author: commit.author().name().unwrap_or("Unknown").to_string(),
+                                        author: commit
+                                            .author()
+                                            .name()
+                                            .unwrap_or("Unknown")
+                                            .to_string(),
                                         timestamp: commit.time().seconds(),
                                         message: commit.message().unwrap_or("").to_string(),
                                         file_path: path.to_string_lossy().to_string(),
@@ -135,7 +140,7 @@ impl GitSearcher {
 
             let oid = oid?;
             let commit = self.repo.find_commit(oid)?;
-            
+
             let files_changed = self.get_changed_files(&commit)?;
 
             commits.push(CommitInfo {
@@ -153,7 +158,10 @@ impl GitSearcher {
         Ok(commits)
     }
 
-    fn get_changed_files(&self, commit: &Commit) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    fn get_changed_files(
+        &self,
+        commit: &Commit,
+    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
         let mut files = Vec::new();
 
         let tree = commit.tree()?;
@@ -164,11 +172,9 @@ impl GitSearcher {
         };
 
         let mut diff_opts = DiffOptions::new();
-        let diff = self.repo.diff_tree_to_tree(
-            parent_tree.as_ref(),
-            Some(&tree),
-            Some(&mut diff_opts),
-        )?;
+        let diff =
+            self.repo
+                .diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), Some(&mut diff_opts))?;
 
         diff.foreach(
             &mut |delta, _| {
@@ -191,7 +197,7 @@ impl GitSearcher {
         max_commits: usize,
     ) -> Result<Vec<CommitInfo>, Box<dyn std::error::Error>> {
         let commits = self.get_commit_history(max_commits * 2)?;
-        
+
         Ok(commits
             .into_iter()
             .filter(|c| c.author.contains(author))
@@ -206,7 +212,7 @@ impl GitSearcher {
     ) -> Result<Vec<CommitInfo>, Box<dyn std::error::Error>> {
         let regex = regex::Regex::new(pattern)?;
         let commits = self.get_commit_history(max_commits * 2)?;
-        
+
         Ok(commits
             .into_iter()
             .filter(|c| regex.is_match(&c.message))
@@ -267,12 +273,12 @@ impl GitSearcher {
         line_number: usize,
     ) -> Result<CommitInfo, Box<dyn std::error::Error>> {
         let blame = self.repo.blame_file(Path::new(file_path), None)?;
-        
+
         if let Some(hunk) = blame.get_line(line_number) {
             let commit = self.repo.find_commit(hunk.final_commit_id())?;
-            
+
             let files_changed = self.get_changed_files(&commit)?;
-            
+
             Ok(CommitInfo {
                 id: commit.id().to_string(),
                 author: commit.author().name().unwrap_or("Unknown").to_string(),
@@ -304,7 +310,7 @@ mod tests {
     fn test_git_searcher_creation() {
         let current_dir = std::env::current_dir().unwrap();
         let result = GitSearcher::new(&current_dir);
-        
+
         assert!(result.is_ok() || result.is_err());
     }
 }

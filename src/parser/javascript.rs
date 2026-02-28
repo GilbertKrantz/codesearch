@@ -5,17 +5,61 @@
 use crate::ast::{AstAnalysis, ClassInfo, FunctionInfo, ImportInfo, VariableInfo};
 use crate::parser::error::ParseError;
 use crate::parser::token::{Token, TokenKind};
-use crate::parser::traits::CodeParser;
 use crate::parser::tokenizer::Tokenizer;
+use crate::parser::traits::CodeParser;
 
 const JS_KEYWORDS: &[&str] = &[
-    "function", "async", "await", "class", "extends", "constructor",
-    "const", "let", "var", "if", "else", "for", "while", "do", "switch",
-    "case", "break", "continue", "return", "throw", "try", "catch", "finally",
-    "new", "this", "super", "static", "public", "private", "protected",
-    "import", "export", "from", "default", "as", "typeof", "instanceof",
-    "void", "delete", "in", "of", "yield", "interface", "type", "enum",
-    "namespace", "module", "declare", "abstract", "implements", "readonly",
+    "function",
+    "async",
+    "await",
+    "class",
+    "extends",
+    "constructor",
+    "const",
+    "let",
+    "var",
+    "if",
+    "else",
+    "for",
+    "while",
+    "do",
+    "switch",
+    "case",
+    "break",
+    "continue",
+    "return",
+    "throw",
+    "try",
+    "catch",
+    "finally",
+    "new",
+    "this",
+    "super",
+    "static",
+    "public",
+    "private",
+    "protected",
+    "import",
+    "export",
+    "from",
+    "default",
+    "as",
+    "typeof",
+    "instanceof",
+    "void",
+    "delete",
+    "in",
+    "of",
+    "yield",
+    "interface",
+    "type",
+    "enum",
+    "namespace",
+    "module",
+    "declare",
+    "abstract",
+    "implements",
+    "readonly",
 ];
 
 pub struct JavaScriptParser;
@@ -127,7 +171,8 @@ impl JavaScriptParser {
         let line = tokens[start].line;
 
         let (parameters, _) = if pos + 1 < tokens.len() {
-            self.parse_parameters(tokens, pos + 1).unwrap_or((Vec::new(), pos + 1))
+            self.parse_parameters(tokens, pos + 1)
+                .unwrap_or((Vec::new(), pos + 1))
         } else {
             (Vec::new(), pos + 1)
         };
@@ -215,10 +260,12 @@ impl JavaScriptParser {
             if brace_depth == 1 && tokens[pos].kind == TokenKind::Identifier {
                 let method_name = tokens[pos].text.to_string();
                 let next_pos = pos + 1;
-                
+
                 if next_pos < tokens.len() && tokens[next_pos].text == "(" {
                     methods.push(method_name);
-                } else if next_pos < tokens.len() && (tokens[next_pos].text == "=" || tokens[next_pos].text == ";") {
+                } else if next_pos < tokens.len()
+                    && (tokens[next_pos].text == "=" || tokens[next_pos].text == ";")
+                {
                     fields.push(method_name);
                 }
             }
@@ -248,7 +295,9 @@ impl JavaScriptParser {
                 while pos < tokens.len() && tokens[pos].line == start_line {
                     if tokens[pos].kind == TokenKind::StringLiteral {
                         let raw = tokens[pos].text;
-                        module = raw.trim_matches(|c: char| c == '"' || c == '\'' || c.is_whitespace()).to_string();
+                        module = raw
+                            .trim_matches(|c: char| c == '"' || c == '\'' || c.is_whitespace())
+                            .to_string();
                         break;
                     }
                     pos += 1;
@@ -260,11 +309,16 @@ impl JavaScriptParser {
                 in_braces = false;
             } else if in_braces && tokens[pos].kind == TokenKind::Identifier {
                 items.push(tokens[pos].text.to_string());
-            } else if !in_braces && tokens[pos].kind == TokenKind::Identifier && tokens[pos].text != "as" {
+            } else if !in_braces
+                && tokens[pos].kind == TokenKind::Identifier
+                && tokens[pos].text != "as"
+            {
                 items.push(tokens[pos].text.to_string());
             } else if tokens[pos].kind == TokenKind::StringLiteral && module.is_empty() {
                 let raw = tokens[pos].text;
-                module = raw.trim_matches(|c: char| c == '"' || c == '\'' || c.is_whitespace()).to_string();
+                module = raw
+                    .trim_matches(|c: char| c == '"' || c == '\'' || c.is_whitespace())
+                    .to_string();
             }
             pos += 1;
         }

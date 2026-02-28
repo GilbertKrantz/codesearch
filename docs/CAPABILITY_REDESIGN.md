@@ -29,6 +29,16 @@
 
 **Summary:** Joern and CodeQL are *deep semantic* tools for security and correctness—they require indexing, a query language, and heavy setup. CodeSearch is *lightweight and immediate*—grep that understands structure, plus one-command health and AI-agent integration. Use CodeSearch for daily discovery and debt; use Joern/CodeQL when you need taint analysis, path queries, or formal vulnerability patterns.
 
+### Where CodeSearch beats them
+
+| Capability | Joern/CodeQL | CodeSearch |
+|------------|--------------|------------|
+| **Unified graph** | CPG in graph DB, import step | `codesearch graph unified` — AST+CFG+DFG in one, no DB, instant |
+| **Data-flow trace** | Taint engine, QL path queries | `codesearch flow <var> [--sink X]` — trace variable flow, no indexing |
+| **Security patterns** | Custom Scala/QL queries | `codesearch security` — eval/exec/SQL/concat patterns out of the box |
+| **Time to first result** | Minutes (import + build) | Sub-second |
+| **Query learning curve** | DSL / QL language | CLI flags, no language |
+
 ---
 
 ## 2. Proposed Differentiator

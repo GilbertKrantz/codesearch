@@ -64,7 +64,7 @@ impl ProgramDependencyGraph {
 
     pub fn from_cfg_and_dfg(cfg: ControlFlowGraph, dfg: DataFlowGraph) -> Self {
         let mut pdg = Self::new(cfg.function_name.clone(), cfg.file_path.clone());
-        
+
         let mut node_id = 0;
         let mut line_to_node: HashMap<usize, usize> = HashMap::new();
 
@@ -85,8 +85,14 @@ impl ProgramDependencyGraph {
 
         for edge in &cfg.edges {
             if let (Some(&from_node), Some(&to_node)) = (
-                cfg.basic_blocks.get(&edge.from).map(|b| b.start_line).and_then(|l| line_to_node.get(&l)),
-                cfg.basic_blocks.get(&edge.to).map(|b| b.start_line).and_then(|l| line_to_node.get(&l)),
+                cfg.basic_blocks
+                    .get(&edge.from)
+                    .map(|b| b.start_line)
+                    .and_then(|l| line_to_node.get(&l)),
+                cfg.basic_blocks
+                    .get(&edge.to)
+                    .map(|b| b.start_line)
+                    .and_then(|l| line_to_node.get(&l)),
             ) {
                 pdg.add_edge(
                     from_node,
@@ -98,19 +104,29 @@ impl ProgramDependencyGraph {
         }
 
         for edge in &dfg.edges {
-            if let (Some(from_node), Some(to_node)) = (dfg.nodes.get(&edge.from), dfg.nodes.get(&edge.to)) {
+            if let (Some(from_node), Some(to_node)) =
+                (dfg.nodes.get(&edge.from), dfg.nodes.get(&edge.to))
+            {
                 if let (Some(&from_id), Some(&to_id)) = (
                     line_to_node.get(&from_node.line),
                     line_to_node.get(&to_node.line),
                 ) {
-                    let existing_edge = pdg.edges.iter_mut().find(|e| e.from == from_id && e.to == to_id);
-                    
+                    let existing_edge = pdg
+                        .edges
+                        .iter_mut()
+                        .find(|e| e.from == from_id && e.to == to_id);
+
                     if let Some(existing) = existing_edge {
                         if existing.dependency_type == DependencyType::ControlDependence {
                             existing.dependency_type = DependencyType::Both;
                         }
                     } else {
-                        pdg.add_edge(from_id, to_id, DependencyType::DataDependence, edge.label.clone());
+                        pdg.add_edge(
+                            from_id,
+                            to_id,
+                            DependencyType::DataDependence,
+                            edge.label.clone(),
+                        );
                     }
                 }
             }
@@ -125,7 +141,13 @@ impl ProgramDependencyGraph {
         self.nodes.insert(node.id, node);
     }
 
-    pub fn add_edge(&mut self, from: usize, to: usize, dependency_type: DependencyType, label: Option<String>) {
+    pub fn add_edge(
+        &mut self,
+        from: usize,
+        to: usize,
+        dependency_type: DependencyType,
+        label: Option<String>,
+    ) {
         self.edges.push(PdgEdge {
             from,
             to,
@@ -173,16 +195,19 @@ impl ProgramDependencyGraph {
         let mut independent_nodes: HashMap<usize, HashSet<usize>> = HashMap::new();
 
         let node_ids: Vec<usize> = self.nodes.keys().copied().collect();
-        
+
         for &node_id in &node_ids {
             let mut independent = HashSet::new();
-            
+
             for &other_id in &node_ids {
-                if node_id != other_id && !self.has_dependency(node_id, other_id) && !self.has_dependency(other_id, node_id) {
+                if node_id != other_id
+                    && !self.has_dependency(node_id, other_id)
+                    && !self.has_dependency(other_id, node_id)
+                {
                     independent.insert(other_id);
                 }
             }
-            
+
             independent_nodes.insert(node_id, independent);
         }
 
@@ -242,7 +267,11 @@ impl ProgramDependencyGraph {
                 DependencyType::Both => ("purple", "bold"),
             };
 
-            let label = edge.label.as_ref().map(|l| format!(" [label=\"{}\"]", l)).unwrap_or_default();
+            let label = edge
+                .label
+                .as_ref()
+                .map(|l| format!(" [label=\"{}\"]", l))
+                .unwrap_or_default();
             dot.push_str(&format!(
                 "  {} -> {} [color={}, style={}{}];\n",
                 edge.from, edge.to, color, style, label
@@ -254,14 +283,20 @@ impl ProgramDependencyGraph {
     }
 }
 
-pub fn build_pdg_from_source(content: &str, function_name: &str, file_path: &str) -> Result<ProgramDependencyGraph, Box<dyn std::error::Error>> {
+pub fn build_pdg_from_source(
+    content: &str,
+    function_name: &str,
+    file_path: &str,
+) -> Result<ProgramDependencyGraph, Box<dyn std::error::Error>> {
     let cfg = crate::cfg::build_cfg_from_source(content, function_name, file_path)?;
     let dfg = crate::dfg::build_dfg_from_source(content, function_name, file_path)?;
-    
+
     Ok(ProgramDependencyGraph::from_cfg_and_dfg(cfg, dfg))
 }
 
-pub fn analyze_file_pdg(path: &Path) -> Result<Vec<ProgramDependencyGraph>, Box<dyn std::error::Error>> {
+pub fn analyze_file_pdg(
+    path: &Path,
+) -> Result<Vec<ProgramDependencyGraph>, Box<dyn std::error::Error>> {
     let content = std::fs::read_to_string(path)?;
     let mut pdgs = Vec::new();
 
@@ -269,7 +304,9 @@ pub fn analyze_file_pdg(path: &Path) -> Result<Vec<ProgramDependencyGraph>, Box<
 
     for cap in function_pattern.captures_iter(&content) {
         if let Some(func_name) = cap.get(1) {
-            if let Ok(pdg) = build_pdg_from_source(&content, func_name.as_str(), &path.to_string_lossy()) {
+            if let Ok(pdg) =
+                build_pdg_from_source(&content, func_name.as_str(), &path.to_string_lossy())
+            {
                 pdgs.push(pdg);
             }
         }
@@ -306,7 +343,7 @@ mod tests {
     #[test]
     fn test_program_slice() {
         let mut pdg = ProgramDependencyGraph::new("test".to_string(), "test.rs".to_string());
-        
+
         pdg.add_node(PdgNode {
             id: 0,
             node_type: PdgNodeType::Statement,
@@ -314,7 +351,7 @@ mod tests {
             line: 1,
             statement: "x = 1".to_string(),
         });
-        
+
         pdg.add_node(PdgNode {
             id: 1,
             node_type: PdgNodeType::Statement,
@@ -322,9 +359,9 @@ mod tests {
             line: 2,
             statement: "y = x + 1".to_string(),
         });
-        
+
         pdg.add_edge(0, 1, DependencyType::DataDependence, None);
-        
+
         let slice = pdg.program_slice(1);
         assert!(slice.contains(&0));
         assert!(slice.contains(&1));
@@ -333,7 +370,7 @@ mod tests {
     #[test]
     fn test_forward_slice() {
         let mut pdg = ProgramDependencyGraph::new("test".to_string(), "test.rs".to_string());
-        
+
         pdg.add_node(PdgNode {
             id: 0,
             node_type: PdgNodeType::Statement,
@@ -341,7 +378,7 @@ mod tests {
             line: 1,
             statement: "x = 1".to_string(),
         });
-        
+
         pdg.add_node(PdgNode {
             id: 1,
             node_type: PdgNodeType::Statement,
@@ -349,9 +386,9 @@ mod tests {
             line: 2,
             statement: "y = x + 1".to_string(),
         });
-        
+
         pdg.add_edge(0, 1, DependencyType::DataDependence, None);
-        
+
         let slice = pdg.forward_slice(0);
         assert!(slice.contains(&0));
         assert!(slice.contains(&1));

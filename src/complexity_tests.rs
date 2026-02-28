@@ -3,9 +3,7 @@
 #[cfg(test)]
 mod edge_case_tests {
     use crate::complexity::{
-        calculate_cognitive_complexity,
-        calculate_cyclomatic_complexity,
-        calculate_file_complexity,
+        calculate_cognitive_complexity, calculate_cyclomatic_complexity, calculate_file_complexity,
         calculate_nesting_depth,
     };
 
@@ -61,7 +59,7 @@ fn test() {
 "#;
         let nesting = calculate_nesting_depth(content);
         assert!(nesting >= 5);
-        
+
         let cognitive = calculate_cognitive_complexity(content);
         assert!(cognitive > 10); // Deep nesting increases cognitive complexity
     }
@@ -120,7 +118,7 @@ fn test() {
 "#;
         let nesting = calculate_nesting_depth(content);
         assert!(nesting >= 3);
-        
+
         let cognitive = calculate_cognitive_complexity(content);
         assert!(cognitive > 5);
     }
@@ -147,7 +145,7 @@ fn test() {
 "#;
         let cyclomatic = calculate_cyclomatic_complexity(content);
         assert!(cyclomatic >= 5);
-        
+
         let cognitive = calculate_cognitive_complexity(content);
         assert!(cognitive >= 10);
     }
@@ -255,7 +253,7 @@ fn test() {
             content.push_str(&format!("    if condition_{i} {{ }}\n"));
         }
         content.push_str("}\n");
-        
+
         let cyclomatic = calculate_cyclomatic_complexity(&content);
         assert!(cyclomatic >= 100);
     }

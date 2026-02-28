@@ -48,7 +48,11 @@ impl DependencyGraph {
     }
 
     pub fn add_edge(&mut self, from: String, to: String, edge_type: EdgeType) {
-        self.edges.push(DependencyEdge { from, to, edge_type });
+        self.edges.push(DependencyEdge {
+            from,
+            to,
+            edge_type,
+        });
     }
 
     pub fn get_dependencies(&self, path: &str) -> Vec<String> {
@@ -74,7 +78,13 @@ impl DependencyGraph {
 
         for node_path in self.nodes.keys() {
             if !visited.contains(node_path) {
-                self.detect_cycle(node_path, &mut visited, &mut rec_stack, &mut Vec::new(), &mut cycles);
+                self.detect_cycle(
+                    node_path,
+                    &mut visited,
+                    &mut rec_stack,
+                    &mut Vec::new(),
+                    &mut cycles,
+                );
             }
         }
 
@@ -117,7 +127,13 @@ impl DependencyGraph {
         max_depth
     }
 
-    fn calculate_depth(&self, node: &str, depth: usize, visited: &mut HashSet<String>, max_depth: &mut usize) {
+    fn calculate_depth(
+        &self,
+        node: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+        max_depth: &mut usize,
+    ) {
         if visited.contains(node) {
             return;
         }
@@ -164,7 +180,10 @@ impl DependencyGraph {
                 EdgeType::Export => "green",
                 EdgeType::Call => "red",
             };
-            dot.push_str(&format!("  \"{}\" -> \"{}\" [color={}];\n", edge.from, edge.to, color));
+            dot.push_str(&format!(
+                "  \"{}\" -> \"{}\" [color={}];\n",
+                edge.from, edge.to, color
+            ));
         }
 
         dot.push_str("}\n");
@@ -225,14 +244,10 @@ pub fn build_dependency_graph(
         } else {
             Vec::new()
         };
-        
+
         for import in imports {
             if let Some(target_path) = resolve_import(&import, file, &files) {
-                graph.add_edge(
-                    file_str.clone(),
-                    target_path,
-                    EdgeType::Import,
-                );
+                graph.add_edge(file_str.clone(), target_path, EdgeType::Import);
             }
         }
     }
@@ -266,7 +281,10 @@ fn extract_imports_from_content(content: &str, ext: &str) -> Vec<String> {
     let patterns = match ext {
         "rs" => vec![r"use\s+([\w:]+)"],
         "py" => vec![r"import\s+([\w.]+)", r"from\s+([\w.]+)\s+import"],
-        "js" | "ts" => vec![r#"import\s+.*\s+from\s+['"]([^'"]+)['"]"#, r#"require\(['"]([^'"]+)['"]\)"#],
+        "js" | "ts" => vec![
+            r#"import\s+.*\s+from\s+['"]([^'"]+)['"]"#,
+            r#"require\(['"]([^'"]+)['"]\)"#,
+        ],
         "go" => vec![r#"import\s+"([^"]+)""#],
         _ => vec![],
     };
@@ -290,7 +308,11 @@ fn extract_exports_from_content(content: &str, ext: &str) -> Vec<String> {
     let mut exports = Vec::new();
 
     let patterns = match ext {
-        "rs" => vec![r"pub\s+fn\s+(\w+)", r"pub\s+struct\s+(\w+)", r"pub\s+enum\s+(\w+)"],
+        "rs" => vec![
+            r"pub\s+fn\s+(\w+)",
+            r"pub\s+struct\s+(\w+)",
+            r"pub\s+enum\s+(\w+)",
+        ],
         "py" => vec![r"def\s+(\w+)", r"class\s+(\w+)"],
         "js" | "ts" => vec![r"export\s+(?:function|class|const|let|var)\s+(\w+)"],
         _ => vec![],
@@ -329,14 +351,14 @@ mod tests {
     #[test]
     fn test_dependency_graph_creation() {
         let mut graph = DependencyGraph::new();
-        
+
         let node = DependencyNode {
             path: "test.rs".to_string(),
             module_name: "test".to_string(),
             imports: vec!["std::io".to_string()],
             exports: vec!["main".to_string()],
         };
-        
+
         graph.add_node(node);
         assert_eq!(graph.nodes.len(), 1);
     }
@@ -345,7 +367,7 @@ mod tests {
     fn test_add_edge() {
         let mut graph = DependencyGraph::new();
         graph.add_edge("a.rs".to_string(), "b.rs".to_string(), EdgeType::Import);
-        
+
         assert_eq!(graph.edges.len(), 1);
         assert_eq!(graph.edges[0].from, "a.rs");
         assert_eq!(graph.edges[0].to, "b.rs");
@@ -356,7 +378,7 @@ mod tests {
         let mut graph = DependencyGraph::new();
         graph.add_edge("a.rs".to_string(), "b.rs".to_string(), EdgeType::Import);
         graph.add_edge("a.rs".to_string(), "c.rs".to_string(), EdgeType::Import);
-        
+
         let deps = graph.get_dependencies("a.rs");
         assert_eq!(deps.len(), 2);
     }
@@ -364,24 +386,24 @@ mod tests {
     #[test]
     fn test_circular_dependency_detection() {
         let mut graph = DependencyGraph::new();
-        
+
         graph.add_node(DependencyNode {
             path: "a.rs".to_string(),
             module_name: "a".to_string(),
             imports: vec![],
             exports: vec![],
         });
-        
+
         graph.add_node(DependencyNode {
             path: "b.rs".to_string(),
             module_name: "b".to_string(),
             imports: vec![],
             exports: vec![],
         });
-        
+
         graph.add_edge("a.rs".to_string(), "b.rs".to_string(), EdgeType::Import);
         graph.add_edge("b.rs".to_string(), "a.rs".to_string(), EdgeType::Import);
-        
+
         let cycles = graph.find_circular_dependencies();
         assert!(!cycles.is_empty());
     }

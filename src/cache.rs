@@ -124,4 +124,3 @@ mod tests {
         assert!(cache.get("key1").is_none());
     }
 }
-

@@ -2,9 +2,9 @@
 //!
 //! Implements maintainability-related metrics including MI, DIT, CBO, and LCOM.
 
-use serde::{Deserialize, Serialize};
 use super::complexity::ComplexityMetrics;
 use super::size::SizeMetrics;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaintainabilityMetrics {
@@ -32,7 +32,7 @@ impl MaintainabilityMetrics {
         let v = halstead_volume.max(1.0);
         let g = cyclomatic_complexity as f64;
         let loc = lines_of_code.max(1) as f64;
-        
+
         let mi = 171.0 - 5.2 * v.ln() - 0.23 * g - 16.2 * loc.ln();
         let normalized = ((mi / 171.0) * 100.0).max(0.0).min(100.0);
         normalized
@@ -50,18 +50,18 @@ pub fn calculate_maintainability_metrics(
         complexity.cyclomatic_complexity,
         size.source_lines,
     );
-    
+
     let churn = CodeChurn {
         lines_added: 0,
         lines_deleted: 0,
         lines_modified: 0,
         churn_rate: 0.0,
     };
-    
+
     let dit = calculate_depth_of_inheritance(content, ext);
     let cbo = calculate_coupling_between_objects(content, ext);
     let lcom = calculate_lack_of_cohesion(content, ext);
-    
+
     MaintainabilityMetrics {
         maintainability_index: mi,
         code_churn: churn,
@@ -79,7 +79,7 @@ fn calculate_depth_of_inheritance(content: &str, ext: &str) -> usize {
         "js" | "ts" => vec![r"extends\s+\w+"],
         _ => vec![],
     };
-    
+
     let mut max_depth = 0;
     for pattern in inheritance_patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
@@ -87,7 +87,7 @@ fn calculate_depth_of_inheritance(content: &str, ext: &str) -> usize {
             max_depth = max_depth.max(count);
         }
     }
-    
+
     max_depth
 }
 
@@ -100,25 +100,25 @@ fn calculate_coupling_between_objects(content: &str, ext: &str) -> usize {
         "go" => vec![r#"import\s+"[^"]+""#],
         _ => vec![],
     };
-    
+
     let mut coupling = 0;
     for pattern in import_patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
             coupling += re.find_iter(content).count();
         }
     }
-    
+
     coupling
 }
 
 fn calculate_lack_of_cohesion(content: &str, ext: &str) -> f64 {
     let method_count = crate::codemetrics::helpers::count_functions(content, ext);
     let field_count = crate::codemetrics::helpers::count_fields(content, ext);
-    
+
     if method_count == 0 || field_count == 0 {
         return 0.0;
     }
-    
+
     let ratio = method_count as f64 / field_count as f64;
     (ratio - 1.0).max(0.0).min(1.0)
 }

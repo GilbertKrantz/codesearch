@@ -72,12 +72,16 @@ impl GraphAnalyzer {
         self
     }
 
-    pub fn analyze_ast(&self, file_path: &Path) -> Result<GraphAnalysisResult, Box<dyn std::error::Error>> {
+    pub fn analyze_ast(
+        &self,
+        file_path: &Path,
+    ) -> Result<GraphAnalysisResult, Box<dyn std::error::Error>> {
         let ast = analyze_file(file_path)?;
-        
-        let node_count = ast.functions.len() + ast.classes.len() + ast.imports.len() + ast.variables.len();
+
+        let node_count =
+            ast.functions.len() + ast.classes.len() + ast.imports.len() + ast.variables.len();
         let mut key_findings = Vec::new();
-        
+
         key_findings.push(format!("Functions: {}", ast.functions.len()));
         key_findings.push(format!("Classes: {}", ast.classes.len()));
         key_findings.push(format!("Imports: {}", ast.imports.len()));
@@ -101,22 +105,28 @@ impl GraphAnalyzer {
         })
     }
 
-    pub fn analyze_cfg(&self, file_path: &Path) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
+    pub fn analyze_cfg(
+        &self,
+        file_path: &Path,
+    ) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
         let cfgs = analyze_file_cfg(file_path)?;
         let mut results = Vec::new();
 
         for cfg in cfgs {
             let mut key_findings = Vec::new();
-            
+
             key_findings.push(format!("Basic blocks: {}", cfg.basic_blocks.len()));
             key_findings.push(format!("Edges: {}", cfg.edges.len()));
-            key_findings.push(format!("Cyclomatic complexity: {}", cfg.calculate_cyclomatic_complexity()));
-            
+            key_findings.push(format!(
+                "Cyclomatic complexity: {}",
+                cfg.calculate_cyclomatic_complexity()
+            ));
+
             let unreachable = cfg.find_unreachable_blocks();
             if !unreachable.is_empty() {
                 key_findings.push(format!("Unreachable blocks: {}", unreachable.len()));
             }
-            
+
             let loops = cfg.find_loops();
             if !loops.is_empty() {
                 key_findings.push(format!("Loops detected: {}", loops.len()));
@@ -138,21 +148,24 @@ impl GraphAnalyzer {
         Ok(results)
     }
 
-    pub fn analyze_dfg(&self, file_path: &Path) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
+    pub fn analyze_dfg(
+        &self,
+        file_path: &Path,
+    ) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
         let dfgs = analyze_file_dfg(file_path)?;
         let mut results = Vec::new();
 
         for dfg in dfgs {
             let mut key_findings = Vec::new();
-            
+
             key_findings.push(format!("Data nodes: {}", dfg.nodes.len()));
             key_findings.push(format!("Data flows: {}", dfg.edges.len()));
-            
+
             let unused = dfg.find_unused_variables();
             if !unused.is_empty() {
                 key_findings.push(format!("Unused variables: {}", unused.len()));
             }
-            
+
             let redundant = dfg.find_redundant_computations();
             if !redundant.is_empty() {
                 key_findings.push(format!("Redundant computations: {}", redundant.len()));
@@ -177,17 +190,17 @@ impl GraphAnalyzer {
     pub fn analyze_call_graph(&self) -> Result<GraphAnalysisResult, Box<dyn std::error::Error>> {
         let path = Path::new(&self.path);
         let graph = build_call_graph(path, self.extensions.as_deref(), self.exclude.as_deref())?;
-        
+
         let mut key_findings = Vec::new();
-        
+
         key_findings.push(format!("Functions: {}", graph.nodes.len()));
         key_findings.push(format!("Function calls: {}", graph.edges.len()));
-        
+
         let recursive = graph.find_recursive_functions();
         if !recursive.is_empty() {
             key_findings.push(format!("Recursive functions: {}", recursive.len()));
         }
-        
+
         let dead = graph.find_dead_functions();
         if !dead.is_empty() {
             key_findings.push(format!("Dead functions: {}", dead.len()));
@@ -206,23 +219,26 @@ impl GraphAnalyzer {
         })
     }
 
-    pub fn analyze_dependency_graph(&self) -> Result<GraphAnalysisResult, Box<dyn std::error::Error>> {
+    pub fn analyze_dependency_graph(
+        &self,
+    ) -> Result<GraphAnalysisResult, Box<dyn std::error::Error>> {
         let path = Path::new(&self.path);
-        let graph = build_dependency_graph(path, self.extensions.as_deref(), self.exclude.as_deref())?;
-        
+        let graph =
+            build_dependency_graph(path, self.extensions.as_deref(), self.exclude.as_deref())?;
+
         let mut key_findings = Vec::new();
-        
+
         key_findings.push(format!("Modules: {}", graph.nodes.len()));
         key_findings.push(format!("Dependencies: {}", graph.edges.len()));
-        
+
         let cycles = graph.find_circular_dependencies();
         if !cycles.is_empty() {
             key_findings.push(format!("Circular dependencies: {}", cycles.len()));
         }
-        
+
         let roots = graph.get_root_nodes();
         key_findings.push(format!("Root modules: {}", roots.len()));
-        
+
         let leaves = graph.get_leaf_nodes();
         key_findings.push(format!("Leaf modules: {}", leaves.len()));
 
@@ -239,27 +255,45 @@ impl GraphAnalyzer {
         })
     }
 
-    pub fn analyze_pdg(&self, file_path: &Path) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
+    pub fn analyze_pdg(
+        &self,
+        file_path: &Path,
+    ) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
         let pdgs = analyze_file_pdg(file_path)?;
         let mut results = Vec::new();
 
         for pdg in pdgs {
             let mut key_findings = Vec::new();
-            
+
             key_findings.push(format!("Nodes: {}", pdg.nodes.len()));
             key_findings.push(format!("Dependencies: {}", pdg.edges.len()));
-            
-            let control_deps = pdg.edges.iter().filter(|e| e.dependency_type == crate::pdg::DependencyType::ControlDependence).count();
-            let data_deps = pdg.edges.iter().filter(|e| e.dependency_type == crate::pdg::DependencyType::DataDependence).count();
-            let both_deps = pdg.edges.iter().filter(|e| e.dependency_type == crate::pdg::DependencyType::Both).count();
-            
+
+            let control_deps = pdg
+                .edges
+                .iter()
+                .filter(|e| e.dependency_type == crate::pdg::DependencyType::ControlDependence)
+                .count();
+            let data_deps = pdg
+                .edges
+                .iter()
+                .filter(|e| e.dependency_type == crate::pdg::DependencyType::DataDependence)
+                .count();
+            let both_deps = pdg
+                .edges
+                .iter()
+                .filter(|e| e.dependency_type == crate::pdg::DependencyType::Both)
+                .count();
+
             key_findings.push(format!("Control dependencies: {}", control_deps));
             key_findings.push(format!("Data dependencies: {}", data_deps));
             key_findings.push(format!("Both: {}", both_deps));
-            
+
             let parallel_ops = pdg.find_parallel_opportunities();
             if !parallel_ops.is_empty() {
-                key_findings.push(format!("Parallelization opportunities: {}", parallel_ops.len()));
+                key_findings.push(format!(
+                    "Parallelization opportunities: {}",
+                    parallel_ops.len()
+                ));
             }
 
             results.push(GraphAnalysisResult {
@@ -278,7 +312,10 @@ impl GraphAnalyzer {
         Ok(results)
     }
 
-    pub fn analyze_all(&self, file_path: &Path) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
+    pub fn analyze_all(
+        &self,
+        file_path: &Path,
+    ) -> Result<Vec<GraphAnalysisResult>, Box<dyn std::error::Error>> {
         let mut results = Vec::new();
 
         if let Ok(ast_result) = self.analyze_ast(file_path) {
@@ -301,7 +338,11 @@ impl GraphAnalyzer {
     }
 }
 
-pub fn export_graph_to_file(result: &GraphAnalysisResult, output_path: &Path, format: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn export_graph_to_file(
+    result: &GraphAnalysisResult,
+    output_path: &Path,
+    format: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     match format {
         "dot" => {
             if let Some(dot) = &result.dot_output {

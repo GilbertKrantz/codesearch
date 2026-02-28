@@ -75,7 +75,11 @@ pub fn analyze_complexity(
             "{} {} CC: {} COG: {} LOC: {} Functions: {} Nesting: {}",
             "📄".dimmed(),
             metrics.file_path.blue(),
-            metrics.cyclomatic_complexity.to_string().color(complexity_color).bold(),
+            metrics
+                .cyclomatic_complexity
+                .to_string()
+                .color(complexity_color)
+                .bold(),
             metrics.cognitive_complexity.to_string().yellow(),
             metrics.lines_of_code.to_string().dimmed(),
             metrics.function_count.to_string().dimmed(),
@@ -94,10 +98,19 @@ pub fn analyze_complexity(
         println!();
         println!("{}", "─".repeat(50).dimmed());
         println!("{}", "📈 Summary".cyan().bold());
-        println!("  Files analyzed: {}", all_metrics.len().to_string().green());
-        println!("  Total cyclomatic complexity: {}", total_cc.to_string().yellow());
+        println!(
+            "  Files analyzed: {}",
+            all_metrics.len().to_string().green()
+        );
+        println!(
+            "  Total cyclomatic complexity: {}",
+            total_cc.to_string().yellow()
+        );
         println!("  Average complexity per file: {:.1}", avg_cc);
-        println!("  Total cognitive complexity: {}", total_cog.to_string().yellow());
+        println!(
+            "  Total cognitive complexity: {}",
+            total_cog.to_string().yellow()
+        );
         println!("  Total lines of code: {}", total_loc.to_string().blue());
         println!("  Total functions: {}", total_funcs.to_string().blue());
     }
@@ -148,12 +161,12 @@ pub fn calculate_cyclomatic_complexity(content: &str) -> u32 {
         r"\bwhile\b",
         r"\bcase\b",
         r"\bcatch\b",
-        r"\b\?\s*:",          // Ternary operator
-        r"\b&&\b",            // Logical AND
-        r"\b\|\|\b",          // Logical OR
-        r"\bmatch\b",         // Rust match
-        r"\bwhen\b",          // Kotlin when
-        r"\bguard\b",         // Swift guard
+        r"\b\?\s*:",  // Ternary operator
+        r"\b&&\b",    // Logical AND
+        r"\b\|\|\b",  // Logical OR
+        r"\bmatch\b", // Rust match
+        r"\bwhen\b",  // Kotlin when
+        r"\bguard\b", // Swift guard
     ];
 
     for pattern in &patterns {
@@ -232,10 +245,10 @@ pub fn count_functions(content: &str, file_path: &str) -> usize {
 
     // Fallback to generic patterns
     let patterns = [
-        r"fn\s+\w+",                    // Rust
-        r"def\s+\w+",                   // Python
-        r"function\s+\w+",              // JavaScript/TypeScript
-        r"func\s+\w+",                  // Go/Swift
+        r"fn\s+\w+",                                                         // Rust
+        r"def\s+\w+",                                                        // Python
+        r"function\s+\w+", // JavaScript/TypeScript
+        r"func\s+\w+",     // Go/Swift
         r"(public|private|protected)?\s*(static\s+)?[\w<>\[\]]+\s+\w+\s*\(", // Java/C#
     ];
 
@@ -342,4 +355,3 @@ mod tests {
         assert!(metrics.cyclomatic_complexity >= 1);
     }
 }
-

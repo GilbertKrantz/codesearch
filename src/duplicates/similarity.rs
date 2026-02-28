@@ -16,10 +16,10 @@ pub struct SimilarityMetrics {
 pub fn calculate_similarity(block1: &CodeBlock, block2: &CodeBlock) -> SimilarityMetrics {
     // 1. Token-based similarity (Jaccard)
     let token_sim = token_similarity(&block1.tokens, &block2.tokens);
-    
+
     // 2. Structural similarity (normalized code comparison)
     let structural_sim = structural_similarity(&block1.normalized, &block2.normalized);
-    
+
     // 3. Determine clone type
     let clone_type = determine_clone_type(
         &block1.content,
@@ -31,7 +31,7 @@ pub fn calculate_similarity(block1: &CodeBlock, block2: &CodeBlock) -> Similarit
         block1.normalized_hash,
         block2.normalized_hash,
     );
-    
+
     // 4. Calculate weighted overall similarity
     let overall = match clone_type {
         CloneType::Type1 => 1.0,
@@ -39,7 +39,7 @@ pub fn calculate_similarity(block1: &CodeBlock, block2: &CodeBlock) -> Similarit
         CloneType::Type3 => token_sim * 0.5 + structural_sim * 0.5,
         CloneType::Type4 => token_sim * 0.8,
     };
-    
+
     SimilarityMetrics {
         token_similarity: token_sim,
         structural_similarity: structural_sim,
@@ -56,17 +56,17 @@ pub fn token_similarity(tokens1: &[String], tokens2: &[String]) -> f64 {
     if tokens1.is_empty() || tokens2.is_empty() {
         return 0.0;
     }
-    
+
     let set1: HashSet<&String> = tokens1.iter().collect();
     let set2: HashSet<&String> = tokens2.iter().collect();
-    
+
     let intersection = set1.intersection(&set2).count();
     let union = set1.union(&set2).count();
-    
+
     if union == 0 {
         return 0.0;
     }
-    
+
     intersection as f64 / union as f64
 }
 
@@ -75,15 +75,15 @@ pub fn structural_similarity(normalized1: &str, normalized2: &str) -> f64 {
     if normalized1 == normalized2 {
         return 1.0;
     }
-    
+
     // Use Levenshtein distance ratio
     let distance = levenshtein_distance(normalized1, normalized2);
     let max_len = normalized1.len().max(normalized2.len());
-    
+
     if max_len == 0 {
         return 1.0;
     }
-    
+
     1.0 - (distance as f64 / max_len as f64)
 }
 
@@ -91,26 +91,26 @@ pub fn structural_similarity(normalized1: &str, normalized2: &str) -> f64 {
 fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     let len1 = s1.chars().count();
     let len2 = s2.chars().count();
-    
+
     if len1 == 0 {
         return len2;
     }
     if len2 == 0 {
         return len1;
     }
-    
+
     let mut matrix = vec![vec![0; len2 + 1]; len1 + 1];
-    
+
     for i in 0..=len1 {
         matrix[i][0] = i;
     }
     for j in 0..=len2 {
         matrix[0][j] = j;
     }
-    
+
     let chars1: Vec<char> = s1.chars().collect();
     let chars2: Vec<char> = s2.chars().collect();
-    
+
     for i in 1..=len1 {
         for j in 1..=len2 {
             let cost = if chars1[i - 1] == chars2[j - 1] { 0 } else { 1 };
@@ -119,7 +119,7 @@ fn levenshtein_distance(s1: &str, s2: &str) -> usize {
                 .min(matrix[i - 1][j - 1] + cost);
         }
     }
-    
+
     matrix[len1][len2]
 }
 
@@ -138,18 +138,18 @@ fn determine_clone_type(
     if normalized1 == normalized2 {
         return CloneType::Type1;
     }
-    
+
     // Type-2: Same structure with renamed variables
     if norm_hash1 == norm_hash2 {
         return CloneType::Type2;
     }
-    
+
     // Type-3: Similar with modifications
     let structural_sim = structural_similarity(normalized1, normalized2);
     if structural_sim > 0.7 {
         return CloneType::Type3;
     }
-    
+
     // Type-4: Semantic similarity (for now, just low structural similarity)
     CloneType::Type4
 }

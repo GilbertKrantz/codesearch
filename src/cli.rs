@@ -12,31 +12,31 @@ use std::path::PathBuf;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
-    
+
     /// Search query pattern
     #[arg(index = 1)]
     pub query: Option<String>,
-    
+
     /// Path to search (file or directory, default: current directory)
     #[arg(index = 2, default_value = ".")]
     pub path: PathBuf,
-    
+
     /// File extensions to include (e.g., rs,py,js)
     #[arg(short, long, value_delimiter = ',')]
     pub extensions: Option<Vec<String>>,
-    
+
     /// Enable fuzzy search
     #[arg(short, long)]
     pub fuzzy: bool,
-    
+
     /// Case-insensitive search (default: true)
     #[arg(short, long, default_value = "true")]
     pub ignore_case: bool,
-    
+
     /// Maximum results per file
     #[arg(short, long, default_value = "10")]
     pub max_results: usize,
-    
+
     /// Exclude directories
     #[arg(long, value_delimiter = ',')]
     pub exclude: Option<Vec<String>>,
@@ -307,10 +307,39 @@ pub enum Commands {
         #[arg(long, default_value = ".codesearch/index.json")]
         index_file: PathBuf,
     },
-    /// Unified graph analysis: cfg, dfg, dep, ast, pdg
+    /// Trace data flow from source variable (lite path-query, no indexing)
+    Flow {
+        /// Source variable to trace
+        source: String,
+        /// Path to analyze (file or directory)
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// Sink pattern to filter (e.g., exec, eval)
+        #[arg(long)]
+        sink: Option<String>,
+        /// File extensions (e.g., rs,py,js)
+        #[arg(short, long, value_delimiter = ',')]
+        extensions: Option<Vec<String>>,
+    },
+    /// Scan for dangerous security patterns (instant, no query language)
+    Security {
+        /// Path to scan (default: current directory)
+        #[arg(default_value = ".")]
+        path: PathBuf,
+        /// File extensions (e.g., js,py,php)
+        #[arg(short, long, value_delimiter = ',')]
+        extensions: Option<Vec<String>>,
+        /// Exclude directories
+        #[arg(long, value_delimiter = ',')]
+        exclude: Option<Vec<String>>,
+        /// Output format (text, json)
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
+    /// Unified graph analysis: cfg, dfg, dep, ast, pdg, unified
     Graph {
-        /// Graph type (cfg, dfg, dep, ast, pdg)
-        #[arg(value_parser = ["cfg", "dfg", "dep", "ast", "pdg"])]
+        /// Graph type (cfg, dfg, dep, ast, pdg, unified)
+        #[arg(value_parser = ["cfg", "dfg", "dep", "ast", "pdg", "unified"])]
         graph_type: String,
         /// Path to analyze (file or directory)
         #[arg(default_value = ".")]

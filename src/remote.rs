@@ -37,7 +37,7 @@ impl RemoteSearcher {
             .timeout(Duration::from_secs(30))
             .user_agent("codesearch/0.1")
             .build()?;
-        
+
         Ok(Self { client, api_token })
     }
 
@@ -71,21 +71,25 @@ impl RemoteSearcher {
     ) -> Result<Vec<RemoteSearchResult>, Box<dyn std::error::Error>> {
         use crate::search::search_code;
         use crate::types::SearchOptions;
-        
+
         let options = SearchOptions {
             extensions: extensions.map(|e| e.to_vec()),
             ignore_case: false,
             fuzzy: false,
             fuzzy_threshold: 0.6,
             max_results: 100,
-            exclude: Some(vec!["target".to_string(), "node_modules".to_string(), ".git".to_string()]),
+            exclude: Some(vec![
+                "target".to_string(),
+                "node_modules".to_string(),
+                ".git".to_string(),
+            ]),
             rank: false,
             cache: false,
             semantic: false,
             benchmark: false,
             vs_grep: false,
         };
-        
+
         let search_results = search_code(pattern, path, &options)?;
 
         let mut results = Vec::new();
@@ -120,13 +124,13 @@ impl RemoteSearcher {
         url.push_str(&format!("&per_page={}", max_results.min(100)));
 
         let mut request = self.client.get(&url);
-        
+
         if let Some(token) = &self.api_token {
             request = request.header("Authorization", format!("token {token}"));
         }
 
         let response = request.send()?;
-        
+
         if !response.status().is_success() {
             return Err(format!("GitHub API error: {}", response.status()).into());
         }
@@ -175,13 +179,13 @@ impl RemoteSearcher {
         );
 
         let mut request = self.client.get(&url);
-        
+
         if let Some(token) = &self.api_token {
             request = request.header("PRIVATE-TOKEN", token);
         }
 
         let response = request.send()?;
-        
+
         if !response.status().is_success() {
             return Err(format!("GitLab API error: {}", response.status()).into());
         }
@@ -190,10 +194,7 @@ impl RemoteSearcher {
         let mut results = Vec::new();
 
         for item in items {
-            if let (Some(path), Some(data)) = (
-                item["path"].as_str(),
-                item["data"].as_str(),
-            ) {
+            if let (Some(path), Some(data)) = (item["path"].as_str(), item["data"].as_str()) {
                 results.push(RemoteSearchResult {
                     repository: item["project_id"].to_string(),
                     file_path: path.to_string(),
@@ -207,17 +208,21 @@ impl RemoteSearcher {
         Ok(results)
     }
 
-    pub fn get_repository_info(&self, owner: &str, repo: &str) -> Result<RepositoryInfo, Box<dyn std::error::Error>> {
+    pub fn get_repository_info(
+        &self,
+        owner: &str,
+        repo: &str,
+    ) -> Result<RepositoryInfo, Box<dyn std::error::Error>> {
         let url = format!("https://api.github.com/repos/{owner}/{repo}");
-        
+
         let mut request = self.client.get(&url);
-        
+
         if let Some(token) = &self.api_token {
             request = request.header("Authorization", format!("token {token}"));
         }
 
         let response = request.send()?;
-        
+
         if !response.status().is_success() {
             return Err(format!("GitHub API error: {}", response.status()).into());
         }

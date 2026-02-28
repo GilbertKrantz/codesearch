@@ -36,17 +36,17 @@ pub struct DuplicateConfig {
     pub min_lines: usize,
     pub min_tokens: usize,
     pub similarity_threshold: f64,
-    
+
     // Advanced filters
     pub exclude_tests: bool,
     pub exclude_generated: bool,
     pub exclude_patterns: Vec<String>,
-    
+
     // Clone type preferences
     pub detect_type1: bool,
     pub detect_type2: bool,
     pub detect_type3: bool,
-    
+
     // Performance
     pub use_parallel: bool,
     pub max_file_size: usize,

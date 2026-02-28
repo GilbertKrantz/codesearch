@@ -1,7 +1,6 @@
 // Dead Code Demonstration File
 // This file intentionally contains dead code for testing the deadcode detection feature
 
-
 // ============================================
 // DEAD CODE EXAMPLES
 // ============================================
@@ -71,7 +70,7 @@ fn main() {
     let mut calc = Calculator::new();
     let sum = calc.add(5, 3);
     println!("Sum: {sum}");
-    
+
     for entry in calc.get_history() {
         println!("{entry}");
     }
@@ -87,4 +86,3 @@ mod tests {
         assert_eq!(calc.add(2, 3), 5);
     }
 }
-

@@ -208,4 +208,3 @@ mod tests {
         assert_eq!(metrics.cognitive_complexity, 0);
     }
 }
-

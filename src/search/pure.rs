@@ -169,7 +169,8 @@ mod tests {
 
     #[test]
     fn test_calculate_relevance_score_pure() {
-        let score = calculate_relevance_score_pure("fn test() {", "test", 10, Some("rs"), false, None);
+        let score =
+            calculate_relevance_score_pure("fn test() {", "test", 10, Some("rs"), false, None);
         assert!(score > 50.0);
         assert!(score <= 100.0);
     }
@@ -199,13 +200,19 @@ mod tests {
         assert!(should_include_line("test line", 5, 100, &[]));
         assert!(!should_include_line("test", 5, 100, &[])); // Too short
         assert!(should_include_line("test line", 5, 100, &["exclude"])); // Doesn't contain "exclude"
-        assert!(!should_include_line("test exclude line", 5, 100, &["exclude"])); // Contains "exclude"
+        assert!(!should_include_line(
+            "test exclude line",
+            5,
+            100,
+            &["exclude"]
+        )); // Contains "exclude"
     }
 
     #[test]
     fn test_file_extension_boost() {
         let score_rs = calculate_relevance_score_pure("test", "test", 10, Some("rs"), false, None);
-        let score_txt = calculate_relevance_score_pure("test", "test", 10, Some("txt"), false, None);
+        let score_txt =
+            calculate_relevance_score_pure("test", "test", 10, Some("txt"), false, None);
         // Both should be high scores due to exact match, but rs should have slight boost
         assert!(score_rs >= score_txt);
         assert!(score_rs >= 95.0); // Should be near max due to exact match

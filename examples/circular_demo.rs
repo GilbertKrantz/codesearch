@@ -3,28 +3,16 @@
 
 // Simple direct recursion
 fn factorial(n: u32) -> u32 {
-    if n <= 1 {
-        1
-    } else {
-        n * factorial(n - 1)
-    }
+    if n <= 1 { 1 } else { n * factorial(n - 1) }
 }
 
 // Mutual recursion: is_even and is_odd call each other
 fn is_even(n: u32) -> bool {
-    if n == 0 {
-        true
-    } else {
-        is_odd(n - 1)
-    }
+    if n == 0 { true } else { is_odd(n - 1) }
 }
 
 fn is_odd(n: u32) -> bool {
-    if n == 0 {
-        false
-    } else {
-        is_even(n - 1)
-    }
+    if n == 0 { false } else { is_even(n - 1) }
 }
 
 // Three-way circular: process_a -> process_b -> process_c -> process_a
@@ -60,4 +48,3 @@ fn main() {
     println!("Processed: {}", process_a("start"));
     println!("Helper: {}", helper(10));
 }
-

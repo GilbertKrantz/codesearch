@@ -47,7 +47,7 @@ pub fn handle_cfg_command(
     output: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let cfg_results = cfg::analyze_file_cfg(path)?;
-    
+
     if let Some(output_path) = output {
         if let Some(first_cfg) = cfg_results.first() {
             let dot = first_cfg.to_dot();
@@ -62,7 +62,7 @@ pub fn handle_cfg_command(
             println!("  Edges: {}", cfg.edges.len());
         }
     }
-    
+
     Ok(())
 }
 
@@ -88,7 +88,7 @@ pub fn handle_dfg_command(
     output: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let dfg_results = dfg::analyze_file_dfg(path)?;
-    
+
     if let Some(output_path) = output {
         if let Some(first_dfg) = dfg_results.first() {
             let dot = first_dfg.to_dot();
@@ -103,7 +103,7 @@ pub fn handle_dfg_command(
             println!("  Edges: {}", dfg.edges.len());
         }
     }
-    
+
     Ok(())
 }
 
@@ -120,7 +120,7 @@ pub fn handle_pdg_command(
     output: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let pdg_results = pdg::analyze_file_pdg(path)?;
-    
+
     if let Some(output_path) = output {
         if let Some(first_pdg) = pdg_results.first() {
             let dot = first_pdg.to_dot();
@@ -135,15 +135,15 @@ pub fn handle_pdg_command(
             println!("  Dependencies: {}", pdg.edges.len());
         }
     }
-    
+
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_handle_cfg_command() {

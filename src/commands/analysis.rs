@@ -91,8 +91,8 @@ pub fn handle_deadcode_command(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_handle_analyze_command() {

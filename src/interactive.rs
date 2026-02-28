@@ -2,11 +2,11 @@
 //!
 //! Provides an interactive REPL for code searching and analysis.
 
-use crate::{analysis, circular, complexity, deadcode, duplicates, export};
-use crate::search::search_code;
 use crate::search::print_results;
 use crate::search::print_search_stats;
+use crate::search::search_code;
 use crate::types::{SearchOptions, SearchResult};
+use crate::{analysis, circular, complexity, deadcode, duplicates, export};
 use colored::*;
 use std::io::{self, Write};
 use std::path::Path;
@@ -44,7 +44,11 @@ pub fn run(
             if semantic_mode { "S" } else { "-" }
         );
 
-        print!("{} {} ", mode_indicator.blue(), "codesearch>".green().bold());
+        print!(
+            "{} {} ",
+            mode_indicator.blue(),
+            "codesearch>".green().bold()
+        );
         io::stdout().flush()?;
 
         let mut input = String::new();
@@ -346,4 +350,3 @@ fn print_help() {
     println!("  quit       - Exit");
     println!();
 }
-

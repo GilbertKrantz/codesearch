@@ -76,27 +76,57 @@ impl<'a> Tokenizer<'a> {
             // Delimiters
             '(' => {
                 self.advance();
-                Some(Token::new(TokenKind::LeftParen, "(", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::LeftParen,
+                    "(",
+                    start_line,
+                    start_column,
+                ))
             }
             ')' => {
                 self.advance();
-                Some(Token::new(TokenKind::RightParen, ")", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::RightParen,
+                    ")",
+                    start_line,
+                    start_column,
+                ))
             }
             '{' => {
                 self.advance();
-                Some(Token::new(TokenKind::LeftBrace, "{", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::LeftBrace,
+                    "{",
+                    start_line,
+                    start_column,
+                ))
             }
             '}' => {
                 self.advance();
-                Some(Token::new(TokenKind::RightBrace, "}", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::RightBrace,
+                    "}",
+                    start_line,
+                    start_column,
+                ))
             }
             '[' => {
                 self.advance();
-                Some(Token::new(TokenKind::LeftBracket, "[", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::LeftBracket,
+                    "[",
+                    start_line,
+                    start_column,
+                ))
             }
             ']' => {
                 self.advance();
-                Some(Token::new(TokenKind::RightBracket, "]", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::RightBracket,
+                    "]",
+                    start_line,
+                    start_column,
+                ))
             }
             ',' => {
                 self.advance();
@@ -108,7 +138,12 @@ impl<'a> Tokenizer<'a> {
             }
             ';' => {
                 self.advance();
-                Some(Token::new(TokenKind::Semicolon, ";", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::Semicolon,
+                    ";",
+                    start_line,
+                    start_column,
+                ))
             }
             '.' => {
                 self.advance();
@@ -116,9 +151,19 @@ impl<'a> Tokenizer<'a> {
                     self.advance();
                     if self.peek() == Some('.') {
                         self.advance();
-                        Some(Token::new(TokenKind::TripleDot, "...", start_line, start_column))
+                        Some(Token::new(
+                            TokenKind::TripleDot,
+                            "...",
+                            start_line,
+                            start_column,
+                        ))
                     } else {
-                        Some(Token::new(TokenKind::DoubleDot, "..", start_line, start_column))
+                        Some(Token::new(
+                            TokenKind::DoubleDot,
+                            "..",
+                            start_line,
+                            start_column,
+                        ))
                     }
                 } else {
                     Some(Token::new(TokenKind::Dot, ".", start_line, start_column))
@@ -138,7 +183,12 @@ impl<'a> Tokenizer<'a> {
             }
             '?' => {
                 self.advance();
-                Some(Token::new(TokenKind::Question, "?", start_line, start_column))
+                Some(Token::new(
+                    TokenKind::Question,
+                    "?",
+                    start_line,
+                    start_column,
+                ))
             }
 
             // Comments (language-specific, default to C-style)

@@ -156,10 +156,10 @@ mod tests {
         let cache = LruCacheWrapper::new(2);
         cache.insert("key1", "value1");
         cache.insert("key2", "value2");
-        
+
         // Access key1 to make it recently used
         cache.get(&"key1");
-        
+
         // Insert key3, should evict key2 (least recently used)
         cache.insert("key3", "value3");
 

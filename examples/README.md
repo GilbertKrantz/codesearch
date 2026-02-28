@@ -52,73 +52,73 @@ Use these examples to test various search patterns:
 ### Basic Text Search
 ```bash
 # Search for function definitions
-codesearch search "function" --extensions js,ts
+codesearch "function" examples --extensions js,ts
 
 # Search for class definitions
-codesearch search "class" --extensions py,js,ts,java
+codesearch "class" examples --extensions py,js,ts,java
 
 # Search for struct definitions
-codesearch search "struct" --extensions rs,go
+codesearch "struct" examples --extensions rs,go
 ```
 
 ### Regex Patterns
 ```bash
 # Find all function definitions
-codesearch search "fn\\s+\\w+" --extensions rs --line-numbers
+codesearch search "fn\\s+\\w+" examples --extensions rs
 
 # Find all public methods
-codesearch search "pub\\s+fn" --extensions rs --line-numbers
+codesearch search "pub\\s+fn" examples --extensions rs
 
 # Find all async functions
-codesearch search "async\\s+function" --extensions js,ts --line-numbers
+codesearch search "async\\s+function" examples --extensions js,ts
 
 # Find all class methods
-codesearch search "def\\s+\\w+" --extensions py --line-numbers
+codesearch search "def\\s+\\w+" examples --extensions py
 ```
 
 ### Case-Insensitive Search
 ```bash
 # Search for error handling patterns
-codesearch search "error" --ignore-case --extensions rs,py,js,ts,go,java
+codesearch search "error" examples --ignore-case --extensions rs,py,js,ts,go,java
 
 # Search for validation patterns
-codesearch search "validate" --ignore-case --line-numbers
+codesearch search "validate" examples --ignore-case
 ```
 
 ### File Filtering
 ```bash
 # List all example files
-codesearch files
+codesearch files examples
 
 # List only Rust files
-codesearch files --extensions rs
+codesearch files examples --extensions rs
 
 # List only Python and JavaScript files
-codesearch files --extensions py,js
+codesearch files examples --extensions py,js
 ```
 
 ### JSON Output
 ```bash
 # Get structured output for analysis
-codesearch search "class" --extensions py,js,ts,java --format json
+codesearch search "class" examples --extensions py,js,ts,java --format json
 
 # Search for imports and exports
-codesearch search "import|export" --extensions js,ts --format json
+codesearch search "import|export" examples --extensions js,ts --format json
 ```
 
 ### Complex Patterns
 ```bash
 # Find all error types
-codesearch search "Error|Exception" --extensions rs,py,js,ts,go,java --line-numbers
+codesearch search "Error|Exception" examples --extensions rs,py,js,ts,go,java
 
 # Find all API endpoints or routes
-codesearch search "app\\.|router\\.|@app\\.|@router\\." --extensions py,js,ts
+codesearch search "app\\.|router\\.|@app\\.|@router\\." examples --extensions py,js,ts
 
 # Find all test functions
-codesearch search "test_|@test|func Test" --extensions py,js,ts,go --line-numbers
+codesearch search "test_|@test|func Test" examples --extensions py,js,ts,go
 
 # Find all configuration or constants
-codesearch search "const|CONST|config|Config" --ignore-case --line-numbers
+codesearch search "const|CONST|config|Config" examples --ignore-case
 ```
 
 ## Search Tips
@@ -139,11 +139,11 @@ Two dedicated demo files (`deadcode_demo.rs` and `deadcode_demo.py`) contain int
 
 ```bash
 # Detect dead code in demo files
-codesearch deadcode -p examples
+codesearch deadcode examples
 
 # Detect dead code in specific language
-codesearch deadcode -p examples -e rs
-codesearch deadcode -p examples -e py
+codesearch deadcode examples --extensions rs
+codesearch deadcode examples --extensions py
 ```
 
 **Types of dead code detected:**

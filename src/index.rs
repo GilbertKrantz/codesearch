@@ -31,40 +31,45 @@ pub struct CodeIndex {
 impl CodeIndex {
     pub fn new(index_path: PathBuf) -> Self {
         let entries = Arc::new(DashMap::new());
-        
+
         if index_path.exists() {
             if let Ok(data) = fs::read_to_string(&index_path) {
-                if let Ok(loaded_entries) = serde_json::from_str::<HashMap<String, IndexEntry>>(&data) {
+                if let Ok(loaded_entries) =
+                    serde_json::from_str::<HashMap<String, IndexEntry>>(&data)
+                {
                     for (key, value) in loaded_entries {
                         entries.insert(key, value);
                     }
                 }
             }
         }
-        
-        Self { entries, index_path }
+
+        Self {
+            entries,
+            index_path,
+        }
     }
 
     pub fn index_file(&self, path: &Path) -> Result<(), Box<dyn std::error::Error>> {
         let metadata = fs::metadata(path)?;
         let modified = metadata.modified()?;
         let size = metadata.len();
-        
+
         let path_str = path.to_string_lossy().to_string();
-        
+
         if let Some(entry) = self.entries.get(&path_str) {
             if entry.modified == modified && entry.size == size {
                 return Ok(());
             }
         }
-        
+
         let content = fs::read_to_string(path)?;
         let lines = content.lines().count();
-        
+
         let functions = extract_functions(&content, path);
         let classes = extract_classes(&content, path);
         let imports = extract_imports(&content, path);
-        
+
         let entry = IndexEntry {
             path: path_str.clone(),
             size,
@@ -74,12 +79,17 @@ impl CodeIndex {
             classes,
             imports,
         };
-        
+
         self.entries.insert(path_str, entry);
         Ok(())
     }
 
-    pub fn index_directory(&self, path: &Path, extensions: Option<&[String]>, exclude: Option<&[String]>) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn index_directory(
+        &self,
+        path: &Path,
+        extensions: Option<&[String]>,
+        exclude: Option<&[String]>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let walker = WalkDir::new(path)
             .into_iter()
             .filter_entry(|e| {
@@ -122,17 +132,18 @@ impl CodeIndex {
     }
 
     pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let entries_map: HashMap<String, IndexEntry> = self.entries
+        let entries_map: HashMap<String, IndexEntry> = self
+            .entries
             .iter()
             .map(|entry| (entry.key().clone(), entry.value().clone()))
             .collect();
-        
+
         let json = serde_json::to_string_pretty(&entries_map)?;
-        
+
         if let Some(parent) = self.index_path.parent() {
             fs::create_dir_all(parent)?;
         }
-        
+
         fs::write(&self.index_path, json)?;
         Ok(())
     }
@@ -182,7 +193,7 @@ impl CodeIndex {
         let total_lines: usize = self.entries.iter().map(|e| e.value().lines).sum();
         let total_functions: usize = self.entries.iter().map(|e| e.value().functions.len()).sum();
         let total_classes: usize = self.entries.iter().map(|e| e.value().classes.len()).sum();
-        
+
         IndexStats {
             total_files,
             total_lines,
@@ -203,16 +214,20 @@ pub struct IndexStats {
 fn extract_functions(content: &str, path: &Path) -> Vec<String> {
     let mut functions = Vec::new();
     let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
-    
+
     let patterns = match ext {
         "rs" => vec![r"fn\s+(\w+)"],
         "py" => vec![r"def\s+(\w+)"],
-        "js" | "ts" => vec![r"function\s+(\w+)", r"const\s+(\w+)\s*=\s*\(", r"(\w+)\s*:\s*\([^)]*\)\s*=>"],
+        "js" | "ts" => vec![
+            r"function\s+(\w+)",
+            r"const\s+(\w+)\s*=\s*\(",
+            r"(\w+)\s*:\s*\([^)]*\)\s*=>",
+        ],
         "go" => vec![r"func\s+(\w+)"],
         "java" | "kt" => vec![r"(?:public|private|protected)?\s*(?:static)?\s*\w+\s+(\w+)\s*\("],
         _ => vec![],
     };
-    
+
     for pattern in patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
             for line in content.lines() {
@@ -224,14 +239,14 @@ fn extract_functions(content: &str, path: &Path) -> Vec<String> {
             }
         }
     }
-    
+
     functions
 }
 
 fn extract_classes(content: &str, path: &Path) -> Vec<String> {
     let mut classes = Vec::new();
     let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
-    
+
     let patterns = match ext {
         "rs" => vec![r"struct\s+(\w+)", r"enum\s+(\w+)", r"trait\s+(\w+)"],
         "py" => vec![r"class\s+(\w+)"],
@@ -240,7 +255,7 @@ fn extract_classes(content: &str, path: &Path) -> Vec<String> {
         "java" | "kt" => vec![r"(?:public|private)?\s*class\s+(\w+)", r"interface\s+(\w+)"],
         _ => vec![],
     };
-    
+
     for pattern in patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
             for line in content.lines() {
@@ -252,23 +267,26 @@ fn extract_classes(content: &str, path: &Path) -> Vec<String> {
             }
         }
     }
-    
+
     classes
 }
 
 fn extract_imports(content: &str, path: &Path) -> Vec<String> {
     let mut imports = Vec::new();
     let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
-    
+
     let patterns = match ext {
         "rs" => vec![r"use\s+([\w:]+)"],
         "py" => vec![r"import\s+([\w.]+)", r"from\s+([\w.]+)\s+import"],
-        "js" | "ts" => vec![r#"import\s+.*\s+from\s+['"]([^'"]+)['"]"#, r#"require\(['"]([^'"]+)['"]\)"#],
+        "js" | "ts" => vec![
+            r#"import\s+.*\s+from\s+['"]([^'"]+)['"]"#,
+            r#"require\(['"]([^'"]+)['"]\)"#,
+        ],
         "go" => vec![r#"import\s+"([^"]+)""#],
         "java" | "kt" => vec![r"import\s+([\w.]+)"],
         _ => vec![],
     };
-    
+
     for pattern in patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
             for line in content.lines() {
@@ -280,7 +298,7 @@ fn extract_imports(content: &str, path: &Path) -> Vec<String> {
             }
         }
     }
-    
+
     imports
 }
 
@@ -295,7 +313,7 @@ mod tests {
         let dir = tempdir().unwrap();
         let index_path = dir.path().join("index.json");
         let index = CodeIndex::new(index_path);
-        
+
         assert_eq!(index.entries.len(), 0);
     }
 
@@ -304,13 +322,13 @@ mod tests {
         let dir = tempdir().unwrap();
         let index_path = dir.path().join("index.json");
         let index = CodeIndex::new(index_path);
-        
+
         let test_file = dir.path().join("test.rs");
         let mut file = fs::File::create(&test_file).unwrap();
         writeln!(file, "fn main() {{\n    println!(\"Hello\");\n}}").unwrap();
-        
+
         index.index_file(&test_file).unwrap();
-        
+
         let entry = index.get(&test_file.to_string_lossy()).unwrap();
         assert_eq!(entry.lines, 3);
         assert!(entry.functions.contains(&"main".to_string()));
@@ -321,7 +339,7 @@ mod tests {
         let content = "fn main() {}\nfn helper() {}";
         let path = Path::new("test.rs");
         let functions = extract_functions(content, path);
-        
+
         assert_eq!(functions.len(), 2);
         assert!(functions.contains(&"main".to_string()));
         assert!(functions.contains(&"helper".to_string()));
@@ -332,7 +350,7 @@ mod tests {
         let content = "struct Config {}\nenum Status {}";
         let path = Path::new("test.rs");
         let classes = extract_classes(content, path);
-        
+
         assert_eq!(classes.len(), 2);
         assert!(classes.contains(&"Config".to_string()));
         assert!(classes.contains(&"Status".to_string()));

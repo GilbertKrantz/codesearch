@@ -16,34 +16,91 @@ fn get_file_extension(file_path: &str) -> &str {
 pub fn is_keyword_or_builtin(name: &str) -> bool {
     matches!(
         name,
-        "if" | "else" | "for" | "while" | "loop" | "match" | "switch" | "case"
-            | "return" | "break" | "continue" | "fn" | "function" | "def" | "func"
-            | "class" | "struct" | "impl" | "trait" | "interface" | "enum" | "type"
-            | "let" | "const" | "var" | "mut" | "pub" | "public" | "private" | "protected"
-            | "static" | "async" | "await" | "try" | "catch" | "throw" | "new"
-            | "import" | "export" | "use" | "from" | "require" | "include"
-            | "true" | "false" | "null" | "None" | "nil" | "undefined"
-            | "self" | "this" | "super" | "println" | "print" | "printf" | "console"
-            | "String" | "Vec" | "Option" | "Result" | "Ok" | "Err" | "Some"
-            | "len" | "append" | "push" | "pop" | "get" | "set" | "map" | "filter"
+        "if" | "else"
+            | "for"
+            | "while"
+            | "loop"
+            | "match"
+            | "switch"
+            | "case"
+            | "return"
+            | "break"
+            | "continue"
+            | "fn"
+            | "function"
+            | "def"
+            | "func"
+            | "class"
+            | "struct"
+            | "impl"
+            | "trait"
+            | "interface"
+            | "enum"
+            | "type"
+            | "let"
+            | "const"
+            | "var"
+            | "mut"
+            | "pub"
+            | "public"
+            | "private"
+            | "protected"
+            | "static"
+            | "async"
+            | "await"
+            | "try"
+            | "catch"
+            | "throw"
+            | "new"
+            | "import"
+            | "export"
+            | "use"
+            | "from"
+            | "require"
+            | "include"
+            | "true"
+            | "false"
+            | "null"
+            | "None"
+            | "nil"
+            | "undefined"
+            | "self"
+            | "this"
+            | "super"
+            | "println"
+            | "print"
+            | "printf"
+            | "console"
+            | "String"
+            | "Vec"
+            | "Option"
+            | "Result"
+            | "Ok"
+            | "Err"
+            | "Some"
+            | "len"
+            | "append"
+            | "push"
+            | "pop"
+            | "get"
+            | "set"
+            | "map"
+            | "filter"
     )
 }
 
 /// Extract identifier from regex captures (first capture group, or last word of full match)
 pub fn extract_identifier_from_match(caps: &regex::Captures) -> Option<String> {
-    let name = caps
-        .get(1)
-        .map(|m| m.as_str().to_string())
-        .or_else(|| {
-            caps.get(0).and_then(|m| {
-                m.as_str()
-                    .split_whitespace()
-                    .last()
-                    .map(|s| s.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
-                    .filter(|s| !s.is_empty())
-                    .map(String::from)
-            })
-        })?;
+    let name = caps.get(1).map(|m| m.as_str().to_string()).or_else(|| {
+        caps.get(0).and_then(|m| {
+            m.as_str()
+                .split_whitespace()
+                .last()
+                .map(|s| s.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
+                .filter(|s| !s.is_empty())
+                .map(String::from)
+        })
+    })?;
     if is_keyword_or_builtin(&name) {
         return None;
     }

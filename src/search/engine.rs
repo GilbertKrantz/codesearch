@@ -48,8 +48,8 @@ impl SearchEngine for DefaultSearchEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_default_search_engine() {

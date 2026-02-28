@@ -3,8 +3,8 @@
 use codesearch::search::search_code;
 use codesearch::types::SearchOptions;
 use proptest::prelude::*;
-use tempfile::tempdir;
 use std::fs;
+use tempfile::tempdir;
 
 // Strategy for generating valid search queries
 fn query_strategy() -> impl Strategy<Value = String> {
@@ -33,8 +33,8 @@ fn search_options_strategy() -> impl Strategy<Value = SearchOptions> {
         0.1f64..1.0f64,
         1usize..100usize,
     )
-        .prop_map(|(extensions, ignore_case, fuzzy, threshold, max_results)| {
-            SearchOptions {
+        .prop_map(
+            |(extensions, ignore_case, fuzzy, threshold, max_results)| SearchOptions {
                 extensions: if extensions.is_empty() {
                     None
                 } else {
@@ -50,8 +50,8 @@ fn search_options_strategy() -> impl Strategy<Value = SearchOptions> {
                 semantic: false,
                 benchmark: false,
                 vs_grep: false,
-            }
-        })
+            },
+        )
 }
 
 proptest! {
@@ -59,10 +59,10 @@ proptest! {
     fn test_search_never_panics(query in query_strategy(), options in search_options_strategy()) {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("test.rs"), "fn test() { println!(\"hello\"); }").unwrap();
-        
+
         // Search should never panic, even with random inputs
         let result = search_code(&query, dir.path(), &options);
-        
+
         // Either succeeds or returns an error, but never panics
         assert!(result.is_ok() || result.is_err());
     }
@@ -75,14 +75,14 @@ proptest! {
         let dir = tempdir().unwrap();
         let content = format!("This contains the word {query} in the text");
         fs::write(dir.path().join("test.txt"), &content).unwrap();
-        
+
         let options = SearchOptions {
             extensions: None,
             ignore_case,
             fuzzy: false,
             ..Default::default()
         };
-        
+
         if let Ok(results) = search_code(&query, dir.path(), &options) {
             // If we find results, they should contain the query
             for result in results {
@@ -101,7 +101,7 @@ proptest! {
         max_results in 1usize..10usize
     ) {
         let dir = tempdir().unwrap();
-        
+
         // Create multiple files with matches
         for i in 0..20 {
             fs::write(
@@ -109,13 +109,13 @@ proptest! {
                 "test test test"
             ).unwrap();
         }
-        
+
         let options = SearchOptions {
             extensions: None,
             max_results,
             ..Default::default()
         };
-        
+
         if let Ok(results) = search_code(&query, dir.path(), &options) {
             // Each file should have at most max_results matches
             for result in results {
@@ -130,7 +130,7 @@ proptest! {
     ) {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("test.rs"), "fn main() {}").unwrap();
-        
+
         // Empty query should not panic
         let result = search_code("", dir.path(), &options);
         assert!(result.is_ok());
@@ -142,13 +142,13 @@ proptest! {
     ) {
         let dir = tempdir().unwrap();
         fs::write(dir.path().join("test.txt"), "testing tests").unwrap();
-        
+
         let options = SearchOptions {
             fuzzy: true,
             fuzzy_threshold: threshold,
             ..Default::default()
         };
-        
+
         // Should not panic regardless of threshold
         let result = search_code("test", dir.path(), &options);
         assert!(result.is_ok());
@@ -162,12 +162,12 @@ proptest! {
         fs::write(dir.path().join("test.rs"), "test").unwrap();
         fs::write(dir.path().join("test.py"), "test").unwrap();
         fs::write(dir.path().join("test.js"), "test").unwrap();
-        
+
         let options = SearchOptions {
             extensions: if extensions.is_empty() { None } else { Some(extensions.clone()) },
             ..Default::default()
         };
-        
+
         if let Ok(results) = search_code("test", dir.path(), &options) {
             // All results should match the extension filter
             for result in results {

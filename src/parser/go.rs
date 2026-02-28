@@ -5,18 +5,74 @@
 use crate::ast::{AstAnalysis, ClassInfo, FunctionInfo, ImportInfo, VariableInfo};
 use crate::parser::error::ParseError;
 use crate::parser::token::{Token, TokenKind};
-use crate::parser::traits::CodeParser;
 use crate::parser::tokenizer::Tokenizer;
+use crate::parser::traits::CodeParser;
 
 const GO_KEYWORDS: &[&str] = &[
-    "break", "case", "chan", "const", "continue", "default", "defer", "else",
-    "fallthrough", "for", "func", "go", "goto", "if", "import", "interface",
-    "map", "package", "range", "return", "select", "struct", "switch", "type",
-    "var", "bool", "byte", "complex64", "complex128", "error", "float32",
-    "float64", "int", "int8", "int16", "int32", "int64", "rune", "string",
-    "uint", "uint8", "uint16", "uint32", "uint64", "uintptr", "true", "false",
-    "iota", "nil", "append", "cap", "close", "complex", "copy", "delete",
-    "imag", "len", "make", "new", "panic", "print", "println", "real", "recover",
+    "break",
+    "case",
+    "chan",
+    "const",
+    "continue",
+    "default",
+    "defer",
+    "else",
+    "fallthrough",
+    "for",
+    "func",
+    "go",
+    "goto",
+    "if",
+    "import",
+    "interface",
+    "map",
+    "package",
+    "range",
+    "return",
+    "select",
+    "struct",
+    "switch",
+    "type",
+    "var",
+    "bool",
+    "byte",
+    "complex64",
+    "complex128",
+    "error",
+    "float32",
+    "float64",
+    "int",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "rune",
+    "string",
+    "uint",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "uintptr",
+    "true",
+    "false",
+    "iota",
+    "nil",
+    "append",
+    "cap",
+    "close",
+    "complex",
+    "copy",
+    "delete",
+    "imag",
+    "len",
+    "make",
+    "new",
+    "panic",
+    "print",
+    "println",
+    "real",
+    "recover",
 ];
 
 pub struct GoParser;
@@ -143,7 +199,11 @@ impl GoParser {
             None
         };
 
-        let is_public = name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false);
+        let is_public = name
+            .chars()
+            .next()
+            .map(|c| c.is_uppercase())
+            .unwrap_or(false);
 
         Some(FunctionInfo {
             name: if let Some(recv) = receiver {
@@ -285,7 +345,11 @@ impl GoParser {
             }
         }
 
-        let is_public = name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false);
+        let is_public = name
+            .chars()
+            .next()
+            .map(|c| c.is_uppercase())
+            .unwrap_or(false);
 
         Some(ClassInfo {
             name,

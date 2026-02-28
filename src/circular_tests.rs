@@ -2,11 +2,13 @@
 
 #[cfg(test)]
 mod complex_circular_tests {
-    use crate::circular::{find_cycles_dfs, deduplicate_cycles, format_cycle, CircularCall};
+    use crate::circular::{CircularCall, deduplicate_cycles, find_cycles_dfs, format_cycle};
     use std::collections::{HashMap, HashSet};
 
     // Helper to create call graph for testing
-    fn create_call_graph(edges: Vec<(&str, Vec<&str>)>) -> HashMap<String, (String, HashSet<String>)> {
+    fn create_call_graph(
+        edges: Vec<(&str, Vec<&str>)>,
+    ) -> HashMap<String, (String, HashSet<String>)> {
         let mut graph = HashMap::new();
         for (func, calls) in edges {
             let call_set: HashSet<String> = calls.iter().map(|s| s.to_string()).collect();
@@ -18,17 +20,21 @@ mod complex_circular_tests {
     #[test]
     fn test_simple_two_node_cycle() {
         // A -> B -> A
-        let graph = create_call_graph(vec![
-            ("A", vec!["B"]),
-            ("B", vec!["A"]),
-        ]);
+        let graph = create_call_graph(vec![("A", vec!["B"]), ("B", vec!["A"])]);
 
         let mut visited = HashSet::new();
         let mut rec_stack = HashSet::new();
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         assert!(!cycles.is_empty());
         assert!(cycles[0].chain.len() >= 2);
@@ -37,18 +43,21 @@ mod complex_circular_tests {
     #[test]
     fn test_three_node_cycle() {
         // A -> B -> C -> A
-        let graph = create_call_graph(vec![
-            ("A", vec!["B"]),
-            ("B", vec!["C"]),
-            ("C", vec!["A"]),
-        ]);
+        let graph = create_call_graph(vec![("A", vec!["B"]), ("B", vec!["C"]), ("C", vec!["A"])]);
 
         let mut visited = HashSet::new();
         let mut rec_stack = HashSet::new();
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         assert!(!cycles.is_empty());
         assert!(cycles[0].chain.len() >= 3);
@@ -57,16 +66,21 @@ mod complex_circular_tests {
     #[test]
     fn test_self_referencing_function() {
         // A -> A (direct recursion)
-        let graph = create_call_graph(vec![
-            ("A", vec!["A"]),
-        ]);
+        let graph = create_call_graph(vec![("A", vec!["A"])]);
 
         let mut visited = HashSet::new();
         let mut rec_stack = HashSet::new();
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         assert!(!cycles.is_empty());
         assert_eq!(cycles[0].chain.len(), 1);
@@ -89,7 +103,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         assert!(!cycles.is_empty());
         assert!(cycles[0].chain.len() >= 5);
@@ -112,7 +133,14 @@ mod complex_circular_tests {
         for start in &["A", "C"] {
             let mut rec_stack = HashSet::new();
             let mut path = Vec::new();
-            find_cycles_dfs(start, &graph, &mut visited, &mut rec_stack, &mut path, &mut all_cycles);
+            find_cycles_dfs(
+                start,
+                &graph,
+                &mut visited,
+                &mut rec_stack,
+                &mut path,
+                &mut all_cycles,
+            );
         }
 
         assert!(all_cycles.len() >= 2);
@@ -134,7 +162,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         // Should detect both cycles
         assert!(cycles.len() >= 1);
@@ -155,7 +190,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         assert!(cycles.is_empty());
     }
@@ -177,7 +219,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         assert!(cycles.is_empty());
     }
@@ -186,17 +235,21 @@ mod complex_circular_tests {
     fn test_cycle_with_external_calls() {
         // A -> B -> A (cycle)
         // A -> external_lib (not in graph)
-        let graph = create_call_graph(vec![
-            ("A", vec!["B", "external_lib"]),
-            ("B", vec!["A"]),
-        ]);
+        let graph = create_call_graph(vec![("A", vec!["B", "external_lib"]), ("B", vec!["A"])]);
 
         let mut visited = HashSet::new();
         let mut rec_stack = HashSet::new();
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         // Should still detect the A -> B -> A cycle
         assert!(!cycles.is_empty());
@@ -219,7 +272,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         // Should detect the C -> D -> C cycle
         assert!(!cycles.is_empty());
@@ -268,7 +328,10 @@ mod complex_circular_tests {
             "funcD".to_string(),
             "funcE".to_string(),
         ];
-        assert_eq!(format_cycle(&chain), "funcA -> funcB -> funcC -> funcD -> funcE -> funcA");
+        assert_eq!(
+            format_cycle(&chain),
+            "funcA -> funcB -> funcC -> funcD -> funcE -> funcA"
+        );
     }
 
     #[test]
@@ -288,7 +351,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         // Should detect at least one cycle
         assert!(!cycles.is_empty());
@@ -311,7 +381,14 @@ mod complex_circular_tests {
             if !visited.contains(*start) {
                 let mut rec_stack = HashSet::new();
                 let mut path = Vec::new();
-                find_cycles_dfs(start, &graph, &mut visited, &mut rec_stack, &mut path, &mut all_cycles);
+                find_cycles_dfs(
+                    start,
+                    &graph,
+                    &mut visited,
+                    &mut rec_stack,
+                    &mut path,
+                    &mut all_cycles,
+                );
             }
         }
 
@@ -335,7 +412,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("A", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "A",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         // Should detect the A -> B -> C -> A cycle
         assert!(!cycles.is_empty());
@@ -363,7 +447,14 @@ mod complex_circular_tests {
         let mut path = Vec::new();
         let mut cycles = Vec::new();
 
-        find_cycles_dfs("f1", &graph, &mut visited, &mut rec_stack, &mut path, &mut cycles);
+        find_cycles_dfs(
+            "f1",
+            &graph,
+            &mut visited,
+            &mut rec_stack,
+            &mut path,
+            &mut cycles,
+        );
 
         assert!(!cycles.is_empty());
         assert!(cycles[0].chain.len() >= 10);
@@ -372,11 +463,7 @@ mod complex_circular_tests {
     #[test]
     fn test_isolated_nodes_no_cycles() {
         // A, B, C are isolated (no calls)
-        let graph = create_call_graph(vec![
-            ("A", vec![]),
-            ("B", vec![]),
-            ("C", vec![]),
-        ]);
+        let graph = create_call_graph(vec![("A", vec![]), ("B", vec![]), ("C", vec![])]);
 
         let mut all_cycles = Vec::new();
         let mut visited = HashSet::new();
@@ -385,7 +472,14 @@ mod complex_circular_tests {
             if !visited.contains(*start) {
                 let mut rec_stack = HashSet::new();
                 let mut path = Vec::new();
-                find_cycles_dfs(start, &graph, &mut visited, &mut rec_stack, &mut path, &mut all_cycles);
+                find_cycles_dfs(
+                    start,
+                    &graph,
+                    &mut visited,
+                    &mut rec_stack,
+                    &mut path,
+                    &mut all_cycles,
+                );
             }
         }
 

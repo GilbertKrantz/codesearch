@@ -9,10 +9,10 @@
 //! - `similarity`: Multi-metric similarity calculation
 //! - `detector`: Core detection logic with parallel processing
 
-mod types;
+mod detector;
 mod normalize;
 mod similarity;
-mod detector;
+mod types;
 
 pub use types::{CloneType, DuplicateConfig, EnhancedDuplicateBlock};
 
@@ -59,16 +59,19 @@ pub fn find_duplicates(
     };
 
     let enhanced = detector::find_duplicates(path, extensions, exclude, config)?;
-    
+
     // Convert to legacy format
-    Ok(enhanced.iter().map(|e| DuplicateBlock {
-        file1: e.file1.clone(),
-        line1: e.line1,
-        file2: e.file2.clone(),
-        line2: e.line2,
-        content: e.content.clone(),
-        similarity: e.similarity,
-    }).collect())
+    Ok(enhanced
+        .iter()
+        .map(|e| DuplicateBlock {
+            file1: e.file1.clone(),
+            line1: e.line1,
+            file2: e.file2.clone(),
+            line2: e.line2,
+            content: e.content.clone(),
+            similarity: e.similarity,
+        })
+        .collect())
 }
 
 /// Enhanced duplicate detection with full configuration
@@ -100,7 +103,10 @@ pub fn find_duplicates_enhanced(
 
 fn print_enhanced_results(duplicates: &[EnhancedDuplicateBlock]) {
     if duplicates.is_empty() {
-        println!("{}", "No significant code duplication found!".green().italic());
+        println!(
+            "{}",
+            "No significant code duplication found!".green().italic()
+        );
         return;
     }
 
@@ -160,19 +166,35 @@ fn print_enhanced_results(duplicates: &[EnhancedDuplicateBlock]) {
         "📈".dimmed(),
         duplicates.len().to_string().yellow().bold()
     );
-    
+
     println!("\n{}", "Clone Type Breakdown:".cyan());
     if type1_count > 0 {
-        println!("  {} Type-1 (Exact): {}", "•".dimmed(), type1_count.to_string().red());
+        println!(
+            "  {} Type-1 (Exact): {}",
+            "•".dimmed(),
+            type1_count.to_string().red()
+        );
     }
     if type2_count > 0 {
-        println!("  {} Type-2 (Renamed): {}", "•".dimmed(), type2_count.to_string().yellow());
+        println!(
+            "  {} Type-2 (Renamed): {}",
+            "•".dimmed(),
+            type2_count.to_string().yellow()
+        );
     }
     if type3_count > 0 {
-        println!("  {} Type-3 (Modified): {}", "•".dimmed(), type3_count.to_string().blue());
+        println!(
+            "  {} Type-3 (Modified): {}",
+            "•".dimmed(),
+            type3_count.to_string().blue()
+        );
     }
     if type4_count > 0 {
-        println!("  {} Type-4 (Semantic): {}", "•".dimmed(), type4_count.to_string().magenta());
+        println!(
+            "  {} Type-4 (Semantic): {}",
+            "•".dimmed(),
+            type4_count.to_string().magenta()
+        );
     }
 }
 

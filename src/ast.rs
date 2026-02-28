@@ -7,9 +7,9 @@
 //! Use [`get_syntax_edges`] to extract explicit syntax relationships (parent-child, contains, imports)
 //! from an [`AstAnalysis`]. These edges complement execution flow (CFG) and data dependencies (DFG).
 
+use crate::parser::{ParseError, get_parser_for_extension};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use crate::parser::{get_parser_for_extension, ParseError};
 
 /// Syntax relationship type for AST edges
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -107,24 +107,27 @@ impl AstParser {
         if get_parser_for_extension(ext).is_some() {
             Ok(Self)
         } else {
-            Err(ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext)))
+            Err(ParseError::UnsupportedFeature(format!(
+                "Extension '{}' not supported",
+                ext
+            )))
         }
     }
 
     pub fn parse_file(&mut self, path: &Path) -> Result<AstAnalysis, ParseError> {
-        let ext = path.extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
-        let parser = get_parser_for_extension(ext)
-            .ok_or_else(|| ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext)))?;
+        let parser = get_parser_for_extension(ext).ok_or_else(|| {
+            ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext))
+        })?;
 
         parser.parse_file(path)
     }
 
     pub fn parse_content(&mut self, content: &str, ext: &str) -> Result<AstAnalysis, ParseError> {
-        let parser = get_parser_for_extension(ext)
-            .ok_or_else(|| ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext)))?;
+        let parser = get_parser_for_extension(ext).ok_or_else(|| {
+            ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext))
+        })?;
 
         parser.parse_content(content)
     }
@@ -185,20 +188,20 @@ pub fn get_syntax_edges(analysis: &AstAnalysis) -> Vec<AstSyntaxEdge> {
 
 /// Analyze a file and extract AST information
 pub fn analyze_file(path: &Path) -> Result<AstAnalysis, ParseError> {
-    let ext = path.extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("");
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
-    let parser = get_parser_for_extension(ext)
-        .ok_or_else(|| ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext)))?;
+    let parser = get_parser_for_extension(ext).ok_or_else(|| {
+        ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext))
+    })?;
 
     parser.parse_file(path)
 }
 
 /// Analyze source code content and extract AST information
 pub fn analyze_content(content: &str, ext: &str) -> Result<AstAnalysis, ParseError> {
-    let parser = get_parser_for_extension(ext)
-        .ok_or_else(|| ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext)))?;
+    let parser = get_parser_for_extension(ext).ok_or_else(|| {
+        ParseError::UnsupportedFeature(format!("Extension '{}' not supported", ext))
+    })?;
 
     parser.parse_content(content)
 }

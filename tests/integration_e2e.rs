@@ -21,8 +21,7 @@ fn test_search_and_export_workflow() {
 
     // Export results
     let export_path = workspace.path().join("results.json");
-    export::export_results(&results, export_path.to_str().unwrap(), "test")
-        .expect("Export failed");
+    export::export_results(&results, export_path.to_str().unwrap(), "test").expect("Export failed");
 
     // Verify export file exists
     assert!(export_path.exists());
@@ -96,7 +95,13 @@ fn complex_function(x: i32) -> i32 {
 "#,
     );
 
-    let result = complexity::analyze_complexity(workspace.path(), Some(&[String::from("rs")]), None, Some(1), false);
+    let result = complexity::analyze_complexity(
+        workspace.path(),
+        Some(&[String::from("rs")]),
+        None,
+        Some(1),
+        false,
+    );
     assert!(result.is_ok());
 }
 
@@ -130,7 +135,7 @@ fn test_search_ranking() {
     };
 
     let results = search_code("test", workspace.path(), &options).expect("Search failed");
-    
+
     if results.len() > 1 {
         // Verify results are sorted by score
         for i in 0..results.len() - 1 {
@@ -151,7 +156,7 @@ fn test_search_with_exclusions() {
     };
 
     let results = search_code("excluded", workspace.path(), &options).expect("Search failed");
-    
+
     // Should not find matches in excluded directory
     for result in results {
         assert!(!result.file.contains("excluded"));
@@ -161,13 +166,10 @@ fn test_search_with_exclusions() {
 #[test]
 fn test_max_results_limit() {
     let mut workspace = TestWorkspace::new();
-    
+
     // Create multiple files with many matches
     for i in 0..10 {
-        workspace.add_file(
-            &format!("file{i}.txt"),
-            "test test test test test",
-        );
+        workspace.add_file(&format!("file{i}.txt"), "test test test test test");
     }
 
     let options = SearchOptions {
@@ -176,7 +178,7 @@ fn test_max_results_limit() {
     };
 
     let results = search_code("test", workspace.path(), &options).expect("Search failed");
-    
+
     // Each file should have at most 2 matches
     for result in results {
         assert!(result.matches.len() <= 2);
@@ -194,7 +196,7 @@ fn test_case_sensitive_search() {
     };
 
     let results = search_code("Test", workspace.path(), &options_sensitive).expect("Search failed");
-    
+
     // Should only match exact case
     for result in results {
         assert!(result.content.contains("Test"));
@@ -211,7 +213,8 @@ fn test_case_insensitive_search() {
         ..Default::default()
     };
 
-    let results = search_code("test", workspace.path(), &options_insensitive).expect("Search failed");
+    let results =
+        search_code("test", workspace.path(), &options_insensitive).expect("Search failed");
     assert!(!results.is_empty());
 }
 
@@ -234,7 +237,7 @@ fn test_nested_directories() {
 
     let options = SearchOptions::default();
     let results = search_code("nested", workspace.path(), &options).expect("Search failed");
-    
+
     assert!(!results.is_empty());
     assert!(results[0].file.contains("level1"));
     assert!(results[0].file.contains("level2"));

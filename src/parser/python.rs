@@ -5,15 +5,15 @@
 use crate::ast::{AstAnalysis, ClassInfo, FunctionInfo, ImportInfo, VariableInfo};
 use crate::parser::error::ParseError;
 use crate::parser::token::{Token, TokenKind};
-use crate::parser::traits::CodeParser;
 use crate::parser::tokenizer::Tokenizer;
+use crate::parser::traits::CodeParser;
 
 /// Python keywords
 const PYTHON_KEYWORDS: &[&str] = &[
-    "def", "class", "if", "elif", "else", "for", "while", "try", "except", "finally",
-    "with", "as", "import", "from", "return", "yield", "raise", "break", "continue",
-    "pass", "lambda", "and", "or", "not", "in", "is", "None", "True", "False",
-    "async", "await", "global", "nonlocal", "assert", "del", "assert",
+    "def", "class", "if", "elif", "else", "for", "while", "try", "except", "finally", "with", "as",
+    "import", "from", "return", "yield", "raise", "break", "continue", "pass", "lambda", "and",
+    "or", "not", "in", "is", "None", "True", "False", "async", "await", "global", "nonlocal",
+    "assert", "del", "assert",
 ];
 
 /// Native Python parser

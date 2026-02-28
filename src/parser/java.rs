@@ -5,17 +5,63 @@
 use crate::ast::{AstAnalysis, ClassInfo, FunctionInfo, ImportInfo, VariableInfo};
 use crate::parser::error::ParseError;
 use crate::parser::token::{Token, TokenKind};
-use crate::parser::traits::CodeParser;
 use crate::parser::tokenizer::Tokenizer;
+use crate::parser::traits::CodeParser;
 
 const JAVA_KEYWORDS: &[&str] = &[
-    "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
-    "class", "const", "continue", "default", "do", "double", "else", "enum",
-    "extends", "final", "finally", "float", "for", "goto", "if", "implements",
-    "import", "instanceof", "int", "interface", "long", "native", "new", "package",
-    "private", "protected", "public", "return", "short", "static", "strictfp",
-    "super", "switch", "synchronized", "this", "throw", "throws", "transient",
-    "try", "void", "volatile", "while", "true", "false", "null",
+    "abstract",
+    "assert",
+    "boolean",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "char",
+    "class",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extends",
+    "final",
+    "finally",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "implements",
+    "import",
+    "instanceof",
+    "int",
+    "interface",
+    "long",
+    "native",
+    "new",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "short",
+    "static",
+    "strictfp",
+    "super",
+    "switch",
+    "synchronized",
+    "this",
+    "throw",
+    "throws",
+    "transient",
+    "try",
+    "void",
+    "volatile",
+    "while",
+    "true",
+    "false",
+    "null",
 ];
 
 pub struct JavaParser;
@@ -117,24 +163,26 @@ impl CodeParser for JavaParser {
 impl JavaParser {
     fn is_method_declaration(&self, tokens: &[Token], start: usize) -> bool {
         let mut pos = start;
-        
+
         while pos < tokens.len() && tokens[pos].kind == TokenKind::Identifier {
             pos += 1;
         }
-        
+
         if pos < tokens.len() && tokens[pos].text == "(" {
             return true;
         }
-        
+
         false
     }
 
     fn is_variable_declaration(&self, tokens: &[Token], start: usize) -> bool {
         let mut pos = start + 1;
-        
+
         while pos < tokens.len() {
             if tokens[pos].kind == TokenKind::Identifier {
-                if pos + 1 < tokens.len() && (tokens[pos + 1].text == "=" || tokens[pos + 1].text == ";") {
+                if pos + 1 < tokens.len()
+                    && (tokens[pos + 1].text == "=" || tokens[pos + 1].text == ";")
+                {
                     return true;
                 }
                 pos += 1;
@@ -144,7 +192,7 @@ impl JavaParser {
                 pos += 1;
             }
         }
-        
+
         false
     }
 
@@ -259,7 +307,10 @@ impl JavaParser {
                         let method_or_field = tokens[next_pos].text.to_string();
                         if next_pos + 1 < tokens.len() && tokens[next_pos + 1].text == "(" {
                             methods.push(method_or_field);
-                        } else if next_pos + 1 < tokens.len() && (tokens[next_pos + 1].text == "=" || tokens[next_pos + 1].text == ";") {
+                        } else if next_pos + 1 < tokens.len()
+                            && (tokens[next_pos + 1].text == "="
+                                || tokens[next_pos + 1].text == ";")
+                        {
                             fields.push(method_or_field);
                         }
                     }
@@ -357,7 +408,10 @@ impl JavaParser {
             if tokens[pos].text == ";" {
                 break;
             }
-            if tokens[pos].kind == TokenKind::Identifier || tokens[pos].text == "." || tokens[pos].text == "*" {
+            if tokens[pos].kind == TokenKind::Identifier
+                || tokens[pos].text == "."
+                || tokens[pos].text == "*"
+            {
                 module.push_str(tokens[pos].text);
             }
             pos += 1;

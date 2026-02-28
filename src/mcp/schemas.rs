@@ -1,7 +1,7 @@
 //! JSON Schema implementations for MCP types
 
-use crate::types::{ComplexityMetrics, DuplicateBlock, FileInfo, Match, SearchResult};
 use crate::deadcode::DeadCodeItem;
+use crate::types::{ComplexityMetrics, DuplicateBlock, FileInfo, Match, SearchResult};
 use schemars::JsonSchema;
 
 impl JsonSchema for SearchResult {

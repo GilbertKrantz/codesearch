@@ -74,7 +74,13 @@ impl ControlFlowGraph {
         self.basic_blocks.insert(block.id, block);
     }
 
-    pub fn add_edge(&mut self, from: usize, to: usize, edge_type: EdgeType, condition: Option<String>) {
+    pub fn add_edge(
+        &mut self,
+        from: usize,
+        to: usize,
+        edge_type: EdgeType,
+        condition: Option<String>,
+    ) {
         self.edges.push(CfgEdge {
             from,
             to,
@@ -86,7 +92,7 @@ impl ControlFlowGraph {
     pub fn find_unreachable_blocks(&self) -> Vec<usize> {
         let mut reachable = HashSet::new();
         let mut queue = VecDeque::new();
-        
+
         queue.push_back(self.entry_block);
         reachable.insert(self.entry_block);
 
@@ -108,7 +114,7 @@ impl ControlFlowGraph {
 
     pub fn find_loops(&self) -> Vec<Vec<usize>> {
         let mut loops = Vec::new();
-        
+
         for edge in &self.edges {
             if edge.edge_type == EdgeType::LoopBack {
                 let loop_nodes = self.find_loop_body(edge.to, edge.from);
@@ -145,7 +151,7 @@ impl ControlFlowGraph {
         let edges = self.edges.len();
         let nodes = self.basic_blocks.len();
         let exit_points = self.exit_blocks.len().max(1);
-        
+
         edges.saturating_sub(nodes) + 2 * exit_points
     }
 
@@ -162,9 +168,15 @@ impl ControlFlowGraph {
                 BlockType::Loop => "lightblue",
                 BlockType::Normal => "white",
             };
-            
-            let label = format!("Block {}\\nLines {}-{}", id, block.start_line, block.end_line);
-            dot.push_str(&format!("  {} [label=\"{}\", fillcolor={}, style=filled];\n", id, label, color));
+
+            let label = format!(
+                "Block {}\\nLines {}-{}",
+                id, block.start_line, block.end_line
+            );
+            dot.push_str(&format!(
+                "  {} [label=\"{}\", fillcolor={}, style=filled];\n",
+                id, label, color
+            ));
         }
 
         dot.push_str("\n");
@@ -174,15 +186,18 @@ impl ControlFlowGraph {
                 Some(cond) => format!(" [label=\"{}\"]", cond),
                 None => String::new(),
             };
-            
+
             let style = match edge.edge_type {
                 EdgeType::LoopBack => " [style=dashed, color=blue]",
                 EdgeType::Conditional => " [color=red]",
                 EdgeType::Break | EdgeType::Continue => " [style=dotted]",
                 _ => "",
             };
-            
-            dot.push_str(&format!("  {} -> {}{}{};\n", edge.from, edge.to, label, style));
+
+            dot.push_str(&format!(
+                "  {} -> {}{}{};\n",
+                edge.from, edge.to, label, style
+            ));
         }
 
         dot.push_str("}\n");
@@ -190,7 +205,11 @@ impl ControlFlowGraph {
     }
 }
 
-pub fn build_cfg_from_source(content: &str, function_name: &str, file_path: &str) -> Result<ControlFlowGraph, Box<dyn std::error::Error>> {
+pub fn build_cfg_from_source(
+    content: &str,
+    function_name: &str,
+    file_path: &str,
+) -> Result<ControlFlowGraph, Box<dyn std::error::Error>> {
     let mut cfg = ControlFlowGraph::new(function_name.to_string(), file_path.to_string());
     let mut block_id = 0;
 
@@ -200,13 +219,15 @@ pub fn build_cfg_from_source(content: &str, function_name: &str, file_path: &str
 
     for (idx, line) in lines.iter().enumerate() {
         let trimmed = line.trim();
-        
-        if !in_function && (trimmed.contains(&format!("fn {}", function_name)) 
-            || trimmed.contains(&format!("def {}", function_name))
-            || trimmed.contains(&format!("function {}", function_name))) {
+
+        if !in_function
+            && (trimmed.contains(&format!("fn {}", function_name))
+                || trimmed.contains(&format!("def {}", function_name))
+                || trimmed.contains(&format!("function {}", function_name)))
+        {
             in_function = true;
             let line_num = idx + 1;
-            
+
             let entry_block = BasicBlock {
                 id: block_id,
                 start_line: line_num,
@@ -245,13 +266,16 @@ pub fn build_cfg_from_source(content: &str, function_name: &str, file_path: &str
                     block_type: BlockType::Branch,
                 };
                 cfg.add_block(branch_block);
-                
+
                 if block_id > 0 {
                     cfg.add_edge(block_id - 1, block_id, EdgeType::Sequential, None);
                 }
-                
+
                 block_id += 1;
-            } else if trimmed.starts_with("while ") || trimmed.starts_with("for ") || trimmed.starts_with("loop") {
+            } else if trimmed.starts_with("while ")
+                || trimmed.starts_with("for ")
+                || trimmed.starts_with("loop")
+            {
                 let loop_block = BasicBlock {
                     id: block_id,
                     start_line: idx + 1,
@@ -260,11 +284,11 @@ pub fn build_cfg_from_source(content: &str, function_name: &str, file_path: &str
                     block_type: BlockType::Loop,
                 };
                 cfg.add_block(loop_block);
-                
+
                 if block_id > 0 {
                     cfg.add_edge(block_id - 1, block_id, EdgeType::Sequential, None);
                 }
-                
+
                 block_id += 1;
             } else if trimmed.starts_with("return") {
                 let return_block = BasicBlock {
@@ -276,11 +300,11 @@ pub fn build_cfg_from_source(content: &str, function_name: &str, file_path: &str
                 };
                 cfg.add_block(return_block);
                 cfg.exit_blocks.push(block_id);
-                
+
                 if block_id > 0 {
                     cfg.add_edge(block_id - 1, block_id, EdgeType::Return, None);
                 }
-                
+
                 block_id += 1;
             }
         }
@@ -298,10 +322,12 @@ pub fn analyze_file_cfg(path: &Path) -> Result<Vec<ControlFlowGraph>, Box<dyn st
     let mut cfgs = Vec::new();
 
     let function_pattern = regex::Regex::new(r"(?:fn|def|function)\s+(\w+)")?;
-    
+
     for cap in function_pattern.captures_iter(&content) {
         if let Some(func_name) = cap.get(1) {
-            if let Ok(cfg) = build_cfg_from_source(&content, func_name.as_str(), &path.to_string_lossy()) {
+            if let Ok(cfg) =
+                build_cfg_from_source(&content, func_name.as_str(), &path.to_string_lossy())
+            {
                 cfgs.push(cfg);
             }
         }
@@ -338,7 +364,7 @@ mod tests {
     #[test]
     fn test_find_unreachable_blocks() {
         let mut cfg = ControlFlowGraph::new("test".to_string(), "test.rs".to_string());
-        
+
         cfg.add_block(BasicBlock {
             id: 0,
             start_line: 1,
@@ -346,7 +372,7 @@ mod tests {
             instructions: vec![],
             block_type: BlockType::Entry,
         });
-        
+
         cfg.add_block(BasicBlock {
             id: 1,
             start_line: 2,
@@ -354,7 +380,7 @@ mod tests {
             instructions: vec![],
             block_type: BlockType::Normal,
         });
-        
+
         cfg.add_block(BasicBlock {
             id: 2,
             start_line: 3,
@@ -362,9 +388,9 @@ mod tests {
             instructions: vec![],
             block_type: BlockType::Normal,
         });
-        
+
         cfg.add_edge(0, 1, EdgeType::Sequential, None);
-        
+
         let unreachable = cfg.find_unreachable_blocks();
         assert_eq!(unreachable.len(), 1);
         assert!(unreachable.contains(&2));
@@ -373,7 +399,7 @@ mod tests {
     #[test]
     fn test_cyclomatic_complexity() {
         let mut cfg = ControlFlowGraph::new("test".to_string(), "test.rs".to_string());
-        
+
         cfg.add_block(BasicBlock {
             id: 0,
             start_line: 1,
@@ -381,7 +407,7 @@ mod tests {
             instructions: vec![],
             block_type: BlockType::Entry,
         });
-        
+
         cfg.add_block(BasicBlock {
             id: 1,
             start_line: 2,
@@ -389,10 +415,10 @@ mod tests {
             instructions: vec![],
             block_type: BlockType::Branch,
         });
-        
+
         cfg.add_edge(0, 1, EdgeType::Sequential, None);
         cfg.exit_blocks.push(1);
-        
+
         let complexity = cfg.calculate_cyclomatic_complexity();
         assert!(complexity > 0);
     }

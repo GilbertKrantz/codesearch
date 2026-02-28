@@ -2,9 +2,9 @@
 //!
 //! Handles all search-related CLI commands.
 
+use crate::export;
 use crate::search::{print_results, print_search_stats, search_code};
 use crate::types::SearchOptions;
-use crate::export;
 use colored::*;
 use std::path::Path;
 
@@ -77,8 +77,8 @@ pub fn handle_search_command(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_handle_search_command() {
@@ -86,15 +86,7 @@ mod tests {
         fs::write(dir.path().join("test.rs"), "fn test() {}").unwrap();
 
         let options = SearchOptions::default();
-        let result = handle_search_command(
-            "test",
-            dir.path(),
-            options,
-            false,
-            "text",
-            false,
-            None,
-        );
+        let result = handle_search_command("test", dir.path(), options, false, "text", false, None);
 
         assert!(result.is_ok());
     }

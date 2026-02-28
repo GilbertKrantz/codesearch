@@ -13,7 +13,10 @@ pub fn extract_dependencies(content: &str, path: &Path) -> Vec<String> {
     let patterns = match ext {
         "rs" => vec![r"use\s+([\w:]+)"],
         "py" => vec![r"import\s+([\w.]+)", r"from\s+([\w.]+)\s+import"],
-        "js" | "ts" => vec![r#"import\s+.*\s+from\s+['\"]([^'\"]+)['\"]"#, r#"require\(['\"]([^'\"]+)['\"]\)"#],
+        "js" | "ts" => vec![
+            r#"import\s+.*\s+from\s+['\"]([^'\"]+)['\"]"#,
+            r#"require\(['\"]([^'\"]+)['\"]\)"#,
+        ],
         "go" => vec![r#"import\s+"([^"]+)""#],
         "java" | "kt" => vec![r"import\s+([\w.]+)"],
         _ => vec![],
@@ -25,7 +28,9 @@ pub fn extract_dependencies(content: &str, path: &Path) -> Vec<String> {
                 if let Some(caps) = re.captures(line) {
                     if let Some(dep) = caps.get(1) {
                         let dep_str = dep.as_str();
-                        let module = dep_str.split("::").next()
+                        let module = dep_str
+                            .split("::")
+                            .next()
                             .or_else(|| dep_str.split(".").next())
                             .or_else(|| dep_str.split("/").last())
                             .unwrap_or(dep_str);
@@ -63,8 +68,12 @@ pub fn extract_classes_with_metrics(content: &str, path: &Path) -> Vec<ClassMetr
                 class_metrics.methods = methods;
                 class_metrics.fields = fields;
 
-                class_metrics.method_field_usage = analyze_method_field_usage(content, &class_metrics.methods, &class_metrics.fields);
-                
+                class_metrics.method_field_usage = analyze_method_field_usage(
+                    content,
+                    &class_metrics.methods,
+                    &class_metrics.fields,
+                );
+
                 class_metrics.calculate_lcom();
                 classes.push(class_metrics);
             }
@@ -74,7 +83,11 @@ pub fn extract_classes_with_metrics(content: &str, path: &Path) -> Vec<ClassMetr
     classes
 }
 
-pub fn extract_class_members(content: &str, _class_name: &str, ext: &str) -> (Vec<String>, Vec<String>) {
+pub fn extract_class_members(
+    content: &str,
+    _class_name: &str,
+    ext: &str,
+) -> (Vec<String>, Vec<String>) {
     let mut methods = Vec::new();
     let mut fields = Vec::new();
 
@@ -113,18 +126,22 @@ pub fn extract_class_members(content: &str, _class_name: &str, ext: &str) -> (Ve
     (methods, fields)
 }
 
-pub fn analyze_method_field_usage(content: &str, methods: &[String], fields: &[String]) -> HashMap<String, HashSet<String>> {
+pub fn analyze_method_field_usage(
+    content: &str,
+    methods: &[String],
+    fields: &[String],
+) -> HashMap<String, HashSet<String>> {
     let mut usage = HashMap::new();
 
     for method in methods {
         let mut used_fields = HashSet::new();
-        
+
         for field in fields {
             if content.contains(&format!("{}", field)) {
                 used_fields.insert(field.clone());
             }
         }
-        
+
         usage.insert(method.clone(), used_fields);
     }
 

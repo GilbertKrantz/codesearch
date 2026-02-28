@@ -127,20 +127,18 @@ mod tests {
     use tempfile::tempdir;
 
     fn create_test_results() -> Vec<SearchResult> {
-        vec![
-            SearchResult {
-                file: "test.rs".to_string(),
-                line_number: 10,
-                content: "fn main() {}".to_string(),
-                matches: vec![Match {
-                    start: 0,
-                    end: 2,
-                    text: "fn".to_string(),
-                }],
-                score: 85.0,
-                relevance: "High".to_string(),
-            },
-        ]
+        vec![SearchResult {
+            file: "test.rs".to_string(),
+            line_number: 10,
+            content: "fn main() {}".to_string(),
+            matches: vec![Match {
+                start: 0,
+                end: 2,
+                text: "fn".to_string(),
+            }],
+            score: 85.0,
+            relevance: "High".to_string(),
+        }]
     }
 
     #[test]
@@ -182,4 +180,3 @@ mod tests {
         assert!(content.contains("test.rs"));
     }
 }
-

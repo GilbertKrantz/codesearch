@@ -8,8 +8,8 @@ use std::path::Path;
 pub trait CodeParser: Send + Sync {
     /// Parse a file and return AST analysis
     fn parse_file(&self, path: &Path) -> Result<AstAnalysis, ParseError> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| ParseError::IoError(e.to_string()))?;
+        let content =
+            std::fs::read_to_string(path).map_err(|e| ParseError::IoError(e.to_string()))?;
         self.parse_content(&content)
     }
 
@@ -53,7 +53,11 @@ pub trait ScopeParser {
     fn extract_scopes(&self, content: &str) -> Result<Vec<Scope>, ParseError>;
 
     /// Find all references to a variable
-    fn find_variable_references(&self, content: &str, var_name: &str) -> Result<Vec<Reference>, ParseError>;
+    fn find_variable_references(
+        &self,
+        content: &str,
+        var_name: &str,
+    ) -> Result<Vec<Reference>, ParseError>;
 }
 
 /// Basic block in control flow graph

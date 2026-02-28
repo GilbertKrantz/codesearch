@@ -1,14 +1,14 @@
 //! Language Support Module
-//! 
+//!
 //! Provides comprehensive multi-language code search support with 48 languages.
 
-pub mod types;
 pub mod definitions;
+pub mod types;
 pub mod utilities;
 
-pub use types::LanguageInfo;
 pub use definitions::get_supported_languages;
-pub use utilities::{get_language_by_extension, get_all_supported_extensions, get_language_name};
+pub use types::LanguageInfo;
+pub use utilities::{get_all_supported_extensions, get_language_by_extension, get_language_name};
 
 #[cfg(test)]
 mod tests {
@@ -32,10 +32,10 @@ mod tests {
     fn test_get_language_name() {
         let name = get_language_name("test.rs");
         assert_eq!(name, "Rust");
-        
+
         let name = get_language_name("test.py");
         assert_eq!(name, "Python");
-        
+
         let name = get_language_name("test.unknown");
         assert_eq!(name, "Unknown");
     }

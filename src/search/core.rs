@@ -2,13 +2,13 @@
 //!
 //! Main search implementation with parallel processing and caching.
 
+use super::fuzzy::search_in_file_parallel;
+use super::semantic::enhance_query_semantically;
+use super::utilities::compare_with_grep;
 use crate::cache::get_search_cache;
 use crate::errors::SearchError;
 use crate::fs::{WalkOptions, create_filtered_walker};
 use crate::types::{SearchMetrics, SearchOptions, SearchResult};
-use super::fuzzy::search_in_file_parallel;
-use super::semantic::enhance_query_semantically;
-use super::utilities::compare_with_grep;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -26,11 +26,21 @@ pub fn search_code(
     let (cache_hits, cache_misses) = if options.cache {
         let search_cache = get_search_cache();
         let extensions_slice = options.extensions.as_ref().map(|v| v.as_slice());
-        let cache_key = search_cache.get_cache_key(query, &path.to_string_lossy(), extensions_slice, options.fuzzy);
+        let cache_key = search_cache.get_cache_key(
+            query,
+            &path.to_string_lossy(),
+            extensions_slice,
+            options.fuzzy,
+        );
         if let Some(cached_results) = search_cache.get(&cache_key) {
             if options.benchmark {
                 use colored::*;
-                println!("{}", "Cache hit! Returning cached results instantly.".green().bold());
+                println!(
+                    "{}",
+                    "Cache hit! Returning cached results instantly."
+                        .green()
+                        .bold()
+                );
             }
             return Ok(cached_results);
         } else {
@@ -48,30 +58,32 @@ pub fn search_code(
 
     let regex = if options.fuzzy {
         if options.ignore_case {
-            Regex::new(&format!("(?i).*{}.*", regex::escape(&enhanced_query)))
-                .map_err(|e| SearchError::InvalidPattern {
+            Regex::new(&format!("(?i).*{}.*", regex::escape(&enhanced_query))).map_err(|e| {
+                SearchError::InvalidPattern {
                     pattern: enhanced_query.clone(),
                     source: e,
-                })?
+                }
+            })?
         } else {
-            Regex::new(&format!(".*{}.*", regex::escape(&enhanced_query)))
-                .map_err(|e| SearchError::InvalidPattern {
+            Regex::new(&format!(".*{}.*", regex::escape(&enhanced_query))).map_err(|e| {
+                SearchError::InvalidPattern {
                     pattern: enhanced_query.clone(),
                     source: e,
-                })?
+                }
+            })?
         }
     } else if options.ignore_case {
-        Regex::new(&format!("(?i){}", &enhanced_query))
-            .map_err(|e| SearchError::InvalidPattern {
+        Regex::new(&format!("(?i){}", &enhanced_query)).map_err(|e| {
+            SearchError::InvalidPattern {
                 pattern: enhanced_query.clone(),
                 source: e,
-            })?
+            }
+        })?
     } else {
-        Regex::new(&enhanced_query)
-            .map_err(|e| SearchError::InvalidPattern {
-                pattern: enhanced_query.clone(),
-                source: e,
-            })?
+        Regex::new(&enhanced_query).map_err(|e| SearchError::InvalidPattern {
+            pattern: enhanced_query.clone(),
+            source: e,
+        })?
     };
 
     // Use the shared file walking utility
@@ -104,7 +116,16 @@ pub fn search_code(
     let file_results: Vec<SearchResult> = files
         .par_iter()
         .filter_map(|file_path| {
-            search_in_file_parallel(file_path, &regex, options.fuzzy, options.fuzzy_threshold, query, options.max_results, options.rank).ok()
+            search_in_file_parallel(
+                file_path,
+                &regex,
+                options.fuzzy,
+                options.fuzzy_threshold,
+                query,
+                options.max_results,
+                options.rank,
+            )
+            .ok()
         })
         .flatten()
         .collect();
@@ -113,7 +134,9 @@ pub fn search_code(
 
     if options.rank {
         results.sort_by(|a, b| {
-            b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal)
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
     }
 
@@ -149,7 +172,12 @@ pub fn search_code(
     if options.cache && !results.is_empty() {
         let search_cache = get_search_cache();
         let extensions_slice = options.extensions.as_ref().map(|v| v.as_slice());
-        let cache_key = search_cache.get_cache_key(query, &path.to_string_lossy(), extensions_slice, options.fuzzy);
+        let cache_key = search_cache.get_cache_key(
+            query,
+            &path.to_string_lossy(),
+            extensions_slice,
+            options.fuzzy,
+        );
         search_cache.set(cache_key, results.clone());
     }
 

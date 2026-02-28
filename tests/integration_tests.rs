@@ -14,14 +14,34 @@ mod tests {
         let test_dir = temp_dir.path();
 
         // Create test files
-        fs::write(test_dir.join("test.rs"), "fn main() {\n    println!(\"Hello, world!\");\n}").unwrap();
-        fs::write(test_dir.join("test.py"), "def hello():\n    print('Hello, world!')\n").unwrap();
-        fs::write(test_dir.join("test.js"), "function hello() {\n    console.log('Hello, world!');\n}\n").unwrap();
-        fs::write(test_dir.join("README.md"), "# Test Project\nThis is a test project.\n").unwrap();
+        fs::write(
+            test_dir.join("test.rs"),
+            "fn main() {\n    println!(\"Hello, world!\");\n}",
+        )
+        .unwrap();
+        fs::write(
+            test_dir.join("test.py"),
+            "def hello():\n    print('Hello, world!')\n",
+        )
+        .unwrap();
+        fs::write(
+            test_dir.join("test.js"),
+            "function hello() {\n    console.log('Hello, world!');\n}\n",
+        )
+        .unwrap();
+        fs::write(
+            test_dir.join("README.md"),
+            "# Test Project\nThis is a test project.\n",
+        )
+        .unwrap();
 
         // Create subdirectory
         fs::create_dir(test_dir.join("src")).unwrap();
-        fs::write(test_dir.join("src/lib.rs"), "pub fn add(a: i32, b: i32) -> i32 {\n    a + b\n}\n").unwrap();
+        fs::write(
+            test_dir.join("src/lib.rs"),
+            "pub fn add(a: i32, b: i32) -> i32 {\n    a + b\n}\n",
+        )
+        .unwrap();
 
         temp_dir
     }
@@ -34,21 +54,37 @@ mod tests {
             .join("target")
             .join("debug")
             .join("codesearch");
-        
+
         let output = if binary_path.exists() {
             Command::new(binary_path)
-                .args(["search", "Hello", temp_dir.path().to_str().unwrap(), "--no-auto-exclude"])
+                .args([
+                    "search",
+                    "Hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--no-auto-exclude",
+                ])
                 .output()
                 .unwrap()
         } else {
             // Fallback to cargo run if binary doesn't exist
             Command::new("cargo")
-                .args(["run", "--", "search", "Hello", temp_dir.path().to_str().unwrap(), "--no-auto-exclude"])
-            .output()
+                .args([
+                    "run",
+                    "--",
+                    "search",
+                    "Hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--no-auto-exclude",
+                ])
+                .output()
                 .unwrap()
         };
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         assert!(stdout.contains("Hello, world!"));
     }
@@ -61,20 +97,42 @@ mod tests {
             .join("target")
             .join("debug")
             .join("codesearch");
-        
+
         let output = if binary_path.exists() {
             Command::new(binary_path)
-                .args(["search", "hello", temp_dir.path().to_str().unwrap(), "--extensions", "rs,py", "--ignore-case", "--no-auto-exclude"])
+                .args([
+                    "search",
+                    "hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--extensions",
+                    "rs,py",
+                    "--ignore-case",
+                    "--no-auto-exclude",
+                ])
                 .output()
                 .unwrap()
         } else {
             Command::new("cargo")
-                .args(["run", "--", "search", "hello", temp_dir.path().to_str().unwrap(), "--extensions", "rs,py", "--ignore-case", "--no-auto-exclude"])
-            .output()
+                .args([
+                    "run",
+                    "--",
+                    "search",
+                    "hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--extensions",
+                    "rs,py",
+                    "--ignore-case",
+                    "--no-auto-exclude",
+                ])
+                .output()
                 .unwrap()
         };
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Check that we get results from .rs and .py files but not .js
         assert!(stdout.contains(".rs"));
@@ -90,20 +148,38 @@ mod tests {
             .join("target")
             .join("debug")
             .join("codesearch");
-        
+
         let output = if binary_path.exists() {
             Command::new(binary_path)
-                .args(["search", "hello", temp_dir.path().to_str().unwrap(), "--ignore-case", "--no-auto-exclude"])
+                .args([
+                    "search",
+                    "hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--ignore-case",
+                    "--no-auto-exclude",
+                ])
                 .output()
                 .unwrap()
         } else {
             Command::new("cargo")
-                .args(["run", "--", "search", "hello", temp_dir.path().to_str().unwrap(), "--ignore-case", "--no-auto-exclude"])
-            .output()
+                .args([
+                    "run",
+                    "--",
+                    "search",
+                    "hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--ignore-case",
+                    "--no-auto-exclude",
+                ])
+                .output()
                 .unwrap()
         };
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         assert!(stdout.contains("Hello, world!"));
     }
@@ -116,20 +192,40 @@ mod tests {
             .join("target")
             .join("debug")
             .join("codesearch");
-        
+
         let output = if binary_path.exists() {
             Command::new(binary_path)
-                .args(["search", r"fn\s+\w+", temp_dir.path().to_str().unwrap(), "--extensions", "rs", "--no-auto-exclude"])
+                .args([
+                    "search",
+                    r"fn\s+\w+",
+                    temp_dir.path().to_str().unwrap(),
+                    "--extensions",
+                    "rs",
+                    "--no-auto-exclude",
+                ])
                 .output()
                 .unwrap()
         } else {
             Command::new("cargo")
-                .args(["run", "--", "search", r"fn\s+\w+", temp_dir.path().to_str().unwrap(), "--extensions", "rs", "--no-auto-exclude"])
-            .output()
+                .args([
+                    "run",
+                    "--",
+                    "search",
+                    r"fn\s+\w+",
+                    temp_dir.path().to_str().unwrap(),
+                    "--extensions",
+                    "rs",
+                    "--no-auto-exclude",
+                ])
+                .output()
                 .unwrap()
         };
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         assert!(stdout.contains("fn main"));
         assert!(stdout.contains("fn add"));
@@ -143,20 +239,36 @@ mod tests {
             .join("target")
             .join("debug")
             .join("codesearch");
-        
+
         let output = if binary_path.exists() {
             Command::new(binary_path)
-                .args(["files", temp_dir.path().to_str().unwrap(), "--extensions", "rs"])
+                .args([
+                    "files",
+                    temp_dir.path().to_str().unwrap(),
+                    "--extensions",
+                    "rs",
+                ])
                 .output()
                 .unwrap()
         } else {
             Command::new("cargo")
-            .args(["run", "--", "files", temp_dir.path().to_str().unwrap(), "--extensions", "rs"])
-            .output()
+                .args([
+                    "run",
+                    "--",
+                    "files",
+                    temp_dir.path().to_str().unwrap(),
+                    "--extensions",
+                    "rs",
+                ])
+                .output()
                 .unwrap()
         };
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         assert!(stdout.contains(".rs"));
         assert!(stdout.contains("src"));
@@ -170,20 +282,40 @@ mod tests {
             .join("target")
             .join("debug")
             .join("codesearch");
-        
+
         let output = if binary_path.exists() {
             Command::new(binary_path)
-                .args(["search", "Hello", temp_dir.path().to_str().unwrap(), "--format", "json", "--no-auto-exclude"])
+                .args([
+                    "search",
+                    "Hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--format",
+                    "json",
+                    "--no-auto-exclude",
+                ])
                 .output()
                 .unwrap()
         } else {
             Command::new("cargo")
-                .args(["run", "--", "search", "Hello", temp_dir.path().to_str().unwrap(), "--format", "json", "--no-auto-exclude"])
-            .output()
+                .args([
+                    "run",
+                    "--",
+                    "search",
+                    "Hello",
+                    temp_dir.path().to_str().unwrap(),
+                    "--format",
+                    "json",
+                    "--no-auto-exclude",
+                ])
+                .output()
                 .unwrap()
         };
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         assert!(stdout.contains("\"file\""));
         assert!(stdout.contains("\"line_number\""));
@@ -201,17 +333,11 @@ mod tests {
     fn run_command(args: &[&str]) -> std::process::Output {
         let binary_path = get_binary_path();
         if binary_path.exists() {
-            Command::new(binary_path)
-                .args(args)
-                .output()
-                .unwrap()
+            Command::new(binary_path).args(args).output().unwrap()
         } else {
             let mut cargo_args = vec!["run", "--"];
             cargo_args.extend(args);
-            Command::new("cargo")
-                .args(cargo_args)
-                .output()
-                .unwrap()
+            Command::new("cargo").args(cargo_args).output().unwrap()
         }
     }
 
@@ -257,7 +383,8 @@ fn main() {
     println!("User added successfully");
 }
 "#,
-        ).unwrap();
+        )
+        .unwrap();
 
         fs::write(
             test_dir.join("complex.py"),
@@ -288,7 +415,8 @@ def main():
     manager.add_user(user)
     print("User added successfully")
 "#,
-        ).unwrap();
+        )
+        .unwrap();
 
         fs::write(
             test_dir.join("complex.js"),
@@ -323,7 +451,8 @@ function main() {
     console.log("User added successfully");
 }
 "#,
-        ).unwrap();
+        )
+        .unwrap();
 
         // Create empty file
         fs::write(test_dir.join("empty.rs"), "").unwrap();
@@ -337,7 +466,8 @@ fn test_special() {
     println!("{}", s);
 }
 "#,
-        ).unwrap();
+        )
+        .unwrap();
 
         // Create nested directory structure
         fs::create_dir_all(test_dir.join("src/models")).unwrap();
@@ -348,7 +478,8 @@ fn test_special() {
     pub name: String,
 }
 "#,
-        ).unwrap();
+        )
+        .unwrap();
 
         // Create file with many matches
         fs::write(
@@ -363,11 +494,18 @@ fn test_special() {
     fn test_fuzzy_search() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "usrmngr", temp_dir.path().to_str().unwrap(),
-            "--fuzzy", "--no-auto-exclude"
+            "search",
+            "usrmngr",
+            temp_dir.path().to_str().unwrap(),
+            "--fuzzy",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Fuzzy search should find "UserManager" even with typo
         assert!(stdout.contains("UserManager") || stdout.contains("user_manager"));
@@ -377,11 +515,18 @@ fn test_special() {
     fn test_ranking() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "user", temp_dir.path().to_str().unwrap(),
-            "--rank", "--no-auto-exclude"
+            "search",
+            "user",
+            temp_dir.path().to_str().unwrap(),
+            "--rank",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should have results
         assert!(!stdout.is_empty());
@@ -391,11 +536,21 @@ fn test_special() {
     fn test_max_results_limit() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", r"fn\s+test\d+", temp_dir.path().to_str().unwrap(),
-            "--extensions", "rs", "--max-results", "5", "--no-auto-exclude"
+            "search",
+            r"fn\s+test\d+",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "rs",
+            "--max-results",
+            "5",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // max-results limits per file, so we check that we got results but they're limited
         // The file has 12 test functions, but we should only see up to 5 per file
@@ -405,7 +560,7 @@ fn test_special() {
         for line in lines {
             if let Some(colon_pos) = line.find(':') {
                 if let Some(space_pos) = line[..colon_pos].rfind(' ') {
-                    if let Ok(num) = line[space_pos+1..colon_pos].parse::<usize>() {
+                    if let Ok(num) = line[space_pos + 1..colon_pos].parse::<usize>() {
                         line_numbers.insert(num);
                     }
                 }
@@ -420,11 +575,19 @@ fn test_special() {
     fn test_exclude_directories() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "User", temp_dir.path().to_str().unwrap(),
-            "--exclude", "src", "--no-auto-exclude"
+            "search",
+            "User",
+            temp_dir.path().to_str().unwrap(),
+            "--exclude",
+            "src",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should not find files in src directory
         assert!(!stdout.contains("src/models"));
@@ -434,25 +597,42 @@ fn test_special() {
     fn test_stats_output() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "User", temp_dir.path().to_str().unwrap(),
-            "--stats", "--no-auto-exclude"
+            "search",
+            "User",
+            temp_dir.path().to_str().unwrap(),
+            "--stats",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should contain statistics
-        assert!(stdout.contains("matches") || stdout.contains("files") || stdout.contains("Statistics"));
+        assert!(
+            stdout.contains("matches") || stdout.contains("files") || stdout.contains("Statistics")
+        );
     }
 
     #[test]
     fn test_complex_regex_pattern() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", r"pub\s+(struct|fn|enum)\s+\w+", temp_dir.path().to_str().unwrap(),
-            "--extensions", "rs", "--no-auto-exclude"
+            "search",
+            r"pub\s+(struct|fn|enum)\s+\w+",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "rs",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should find struct and function definitions
         assert!(stdout.contains("pub struct") || stdout.contains("pub fn"));
@@ -462,11 +642,19 @@ fn test_special() {
     fn test_multiple_extensions() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "class", temp_dir.path().to_str().unwrap(),
-            "--extensions", "py,js", "--no-auto-exclude"
+            "search",
+            "class",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "py,js",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should find classes in both Python and JavaScript files
         assert!(stdout.contains(".py") || stdout.contains(".js"));
@@ -476,11 +664,17 @@ fn test_special() {
     fn test_special_characters() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "世界", temp_dir.path().to_str().unwrap(),
-            "--no-auto-exclude"
+            "search",
+            "世界",
+            temp_dir.path().to_str().unwrap(),
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should handle unicode characters
         assert!(stdout.contains("世界") || stdout.contains("special.rs"));
@@ -490,11 +684,19 @@ fn test_special() {
     fn test_empty_file_handling() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "anything", temp_dir.path().to_str().unwrap(),
-            "--extensions", "rs", "--no-auto-exclude"
+            "search",
+            "anything",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "rs",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         // Should not crash on empty files
     }
 
@@ -503,33 +705,52 @@ fn test_special() {
         let temp_dir = create_complex_test_files();
         // Search for TODO first
         let output_todo = run_command(&[
-            "search", "TODO", temp_dir.path().to_str().unwrap(),
-            "--ignore-case", "--no-auto-exclude"
+            "search",
+            "TODO",
+            temp_dir.path().to_str().unwrap(),
+            "--ignore-case",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output_todo.status.success(), "Command failed: {}", String::from_utf8_lossy(&output_todo.stderr));
+        assert!(
+            output_todo.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output_todo.stderr)
+        );
         let stdout_todo = String::from_utf8(output_todo.stdout).unwrap();
-        
+
         // Search for FIXME
         let output_fixme = run_command(&[
-            "search", "FIXME", temp_dir.path().to_str().unwrap(),
-            "--ignore-case", "--no-auto-exclude"
+            "search",
+            "FIXME",
+            temp_dir.path().to_str().unwrap(),
+            "--ignore-case",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output_fixme.status.success(), "Command failed: {}", String::from_utf8_lossy(&output_fixme.stderr));
+        assert!(
+            output_fixme.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output_fixme.stderr)
+        );
         let stdout_fixme = String::from_utf8(output_fixme.stdout).unwrap();
-        
+
         // Should find at least one TODO or FIXME comment
-        let has_todo = stdout_todo.to_uppercase().contains("TODO") && !stdout_todo.contains("No matches");
-        let has_fixme = stdout_fixme.to_uppercase().contains("FIXME") && !stdout_fixme.contains("No matches");
-        assert!(has_todo || has_fixme, "Should find TODO or FIXME comments. TODO output: {stdout_todo}, FIXME output: {stdout_fixme}");
+        let has_todo =
+            stdout_todo.to_uppercase().contains("TODO") && !stdout_todo.contains("No matches");
+        let has_fixme =
+            stdout_fixme.to_uppercase().contains("FIXME") && !stdout_fixme.contains("No matches");
+        assert!(
+            has_todo || has_fixme,
+            "Should find TODO or FIXME comments. TODO output: {stdout_todo}, FIXME output: {stdout_fixme}"
+        );
     }
 
     #[test]
     fn test_simple_search_without_subcommand() {
         let temp_dir = create_test_files();
         let binary_path = get_binary_path();
-        
+
         let output = if binary_path.exists() {
             Command::new(binary_path)
                 .args([temp_dir.path().to_str().unwrap(), "Hello"])
@@ -550,11 +771,17 @@ fn test_special() {
     fn test_analyze_command() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "analyze", temp_dir.path().to_str().unwrap(),
-            "--extensions", "rs,py,js"
+            "analyze",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "rs,py,js",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should contain analysis output
         assert!(!stdout.is_empty());
@@ -564,11 +791,17 @@ fn test_special() {
     fn test_files_command_with_extensions() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "files", temp_dir.path().to_str().unwrap(),
-            "--extensions", "rs,py,js"
+            "files",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "rs,py,js",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should list files with specified extensions
         assert!(stdout.contains(".rs") || stdout.contains(".py") || stdout.contains(".js"));
@@ -578,11 +811,20 @@ fn test_special() {
     fn test_fuzzy_threshold() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "usrmngr", temp_dir.path().to_str().unwrap(),
-            "--fuzzy", "--fuzzy-threshold", "0.5", "--no-auto-exclude"
+            "search",
+            "usrmngr",
+            temp_dir.path().to_str().unwrap(),
+            "--fuzzy",
+            "--fuzzy-threshold",
+            "0.5",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should find matches with fuzzy threshold
         assert!(!stdout.is_empty());
@@ -592,13 +834,18 @@ fn test_special() {
     fn test_case_sensitive_search() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "User", temp_dir.path().to_str().unwrap(),
-            "--no-auto-exclude"
-            // Note: --ignore-case is false by default, but simple search uses ignore_case=true
-            // This test uses explicit search command
+            "search",
+            "User",
+            temp_dir.path().to_str().unwrap(),
+            "--no-auto-exclude", // Note: --ignore-case is false by default, but simple search uses ignore_case=true
+                                 // This test uses explicit search command
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should find "User" (capitalized)
         assert!(stdout.contains("User"));
@@ -608,11 +855,19 @@ fn test_special() {
     fn test_nested_directory_search() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "User", temp_dir.path().to_str().unwrap(),
-            "--extensions", "rs", "--no-auto-exclude"
+            "search",
+            "User",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "rs",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should search in nested directories
         assert!(stdout.contains("User") || stdout.contains("user"));
@@ -622,19 +877,27 @@ fn test_special() {
     fn test_json_format_structure() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "User", temp_dir.path().to_str().unwrap(),
-            "--format", "json", "--no-auto-exclude"
+            "search",
+            "User",
+            temp_dir.path().to_str().unwrap(),
+            "--format",
+            "json",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
-        
+
         // Verify JSON structure
         assert!(stdout.starts_with("[") || stdout.starts_with("{"));
         assert!(stdout.contains("\"file\""));
         assert!(stdout.contains("\"line_number\""));
         assert!(stdout.contains("\"content\""));
-        
+
         // Try to parse as JSON to ensure it's valid
         let json_result: Result<serde_json::Value, _> = serde_json::from_str(&stdout);
         assert!(json_result.is_ok(), "Invalid JSON output: {stdout}");
@@ -644,11 +907,18 @@ fn test_special() {
     fn test_no_line_numbers_flag() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", "User", temp_dir.path().to_str().unwrap(),
-            "--no-line-numbers", "--no-auto-exclude"
+            "search",
+            "User",
+            temp_dir.path().to_str().unwrap(),
+            "--no-line-numbers",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Output should still contain results, just without line numbers in the format
         assert!(!stdout.is_empty());
@@ -658,11 +928,19 @@ fn test_special() {
     fn test_multiple_patterns_in_single_file() {
         let temp_dir = create_complex_test_files();
         let output = run_command(&[
-            "search", r"(struct|class|function)\s+\w+", temp_dir.path().to_str().unwrap(),
-            "--extensions", "rs,py,js", "--no-auto-exclude"
+            "search",
+            r"(struct|class|function)\s+\w+",
+            temp_dir.path().to_str().unwrap(),
+            "--extensions",
+            "rs,py,js",
+            "--no-auto-exclude",
         ]);
 
-        assert!(output.status.success(), "Command failed: {}", String::from_utf8_lossy(&output.stderr));
+        assert!(
+            output.status.success(),
+            "Command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         let stdout = String::from_utf8(output.stdout).unwrap();
         // Should find multiple patterns (struct, class, function)
         assert!(!stdout.is_empty());

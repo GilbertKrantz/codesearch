@@ -19,10 +19,7 @@ pub enum ParseError {
     },
 
     /// End of input reached unexpectedly
-    UnexpectedEof {
-        expected: String,
-        line: usize,
-    },
+    UnexpectedEof { expected: String, line: usize },
 
     /// Unsupported language feature
     UnsupportedFeature(String),
@@ -37,14 +34,34 @@ pub enum ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseError::SyntaxError { line, column, message } => {
-                write!(f, "Syntax error at line {}, column {}: {}", line, column, message)
+            ParseError::SyntaxError {
+                line,
+                column,
+                message,
+            } => {
+                write!(
+                    f,
+                    "Syntax error at line {}, column {}: {}",
+                    line, column, message
+                )
             }
-            ParseError::UnexpectedToken { expected, found, line } => {
-                write!(f, "Unexpected token at line {}: expected '{}', found '{}'", line, expected, found)
+            ParseError::UnexpectedToken {
+                expected,
+                found,
+                line,
+            } => {
+                write!(
+                    f,
+                    "Unexpected token at line {}: expected '{}', found '{}'",
+                    line, expected, found
+                )
             }
             ParseError::UnexpectedEof { expected, line } => {
-                write!(f, "Unexpected end of file at line {}: expected '{}'", line, expected)
+                write!(
+                    f,
+                    "Unexpected end of file at line {}: expected '{}'",
+                    line, expected
+                )
             }
             ParseError::UnsupportedFeature(feature) => {
                 write!(f, "Unsupported language feature: {}", feature)

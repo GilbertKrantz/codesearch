@@ -2,16 +2,16 @@
 //!
 //! Run with: cargo bench
 
-use codesearch::search::search_code;
 use codesearch::search::pure::*;
+use codesearch::search::search_code;
 use codesearch::types::SearchOptions;
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::fs;
 use tempfile::tempdir;
 
 fn benchmark_search_small(c: &mut Criterion) {
     let dir = tempdir().unwrap();
-    
+
     // Create small test files
     for i in 0..10 {
         fs::write(
@@ -25,14 +25,18 @@ fn benchmark_search_small(c: &mut Criterion) {
 
     c.bench_function("search_small_10_files", |b| {
         b.iter(|| {
-            search_code(black_box("test"), black_box(dir.path()), black_box(&options))
+            search_code(
+                black_box("test"),
+                black_box(dir.path()),
+                black_box(&options),
+            )
         })
     });
 }
 
 fn benchmark_search_medium(c: &mut Criterion) {
     let dir = tempdir().unwrap();
-    
+
     // Create medium test files
     for i in 0..100 {
         let content = format!(
@@ -45,7 +49,11 @@ fn benchmark_search_medium(c: &mut Criterion) {
 
     c.bench_function("search_medium_100_files", |b| {
         b.iter(|| {
-            search_code(black_box("test"), black_box(dir.path()), black_box(&options))
+            search_code(
+                black_box("test"),
+                black_box(dir.path()),
+                black_box(&options),
+            )
         })
     });
 }
@@ -67,19 +75,13 @@ fn benchmark_relevance_score(c: &mut Criterion) {
 
 fn benchmark_fuzzy_match_quality(c: &mut Criterion) {
     c.bench_function("fuzzy_match_quality", |b| {
-        b.iter(|| {
-            fuzzy_match_quality(
-                black_box(100),
-                black_box(4),
-                black_box(50),
-            )
-        })
+        b.iter(|| fuzzy_match_quality(black_box(100), black_box(4), black_box(50)))
     });
 }
 
 fn benchmark_search_with_options(c: &mut Criterion) {
     let dir = tempdir().unwrap();
-    
+
     for i in 0..50 {
         fs::write(
             dir.path().join(format!("file{i}.rs")),
@@ -89,29 +91,29 @@ fn benchmark_search_with_options(c: &mut Criterion) {
     }
 
     let mut group = c.benchmark_group("search_with_options");
-    
+
     for fuzzy in [false, true].iter() {
-        group.bench_with_input(
-            BenchmarkId::new("fuzzy", fuzzy),
-            fuzzy,
-            |b, &fuzzy| {
-                let options = SearchOptions {
-                    fuzzy,
-                    ..Default::default()
-                };
-                b.iter(|| {
-                    search_code(black_box("test"), black_box(dir.path()), black_box(&options))
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("fuzzy", fuzzy), fuzzy, |b, &fuzzy| {
+            let options = SearchOptions {
+                fuzzy,
+                ..Default::default()
+            };
+            b.iter(|| {
+                search_code(
+                    black_box("test"),
+                    black_box(dir.path()),
+                    black_box(&options),
+                )
+            })
+        });
     }
-    
+
     group.finish();
 }
 
 fn benchmark_pure_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("pure_functions");
-    
+
     group.bench_function("should_include_line", |b| {
         b.iter(|| {
             should_include_line(
@@ -122,13 +124,11 @@ fn benchmark_pure_functions(c: &mut Criterion) {
             )
         })
     });
-    
+
     group.bench_function("relevance_category", |b| {
-        b.iter(|| {
-            relevance_category(black_box(75.0))
-        })
+        b.iter(|| relevance_category(black_box(75.0)))
     });
-    
+
     group.finish();
 }
 

@@ -213,7 +213,7 @@ mod tests {
             pattern: "[".to_string(),
             source: regex_err,
         };
-        
+
         assert!(search_err.source().is_some());
     }
 }

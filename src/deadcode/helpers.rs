@@ -4,16 +4,40 @@
 pub fn is_special_function(name: &str) -> bool {
     matches!(
         name,
-        "main" | "new" | "default" | "init" | "__init__" | "setup" | "teardown"
-            | "test" | "run" | "start" | "stop" | "get" | "set" | "from" | "into"
-            | "drop" | "clone" | "fmt" | "eq" | "hash" | "cmp" | "partial_cmp"
-            | "serialize" | "deserialize" | "encode" | "decode"
-            | "constructor" | "destructor" | "finalize"
+        "main"
+            | "new"
+            | "default"
+            | "init"
+            | "__init__"
+            | "setup"
+            | "teardown"
+            | "test"
+            | "run"
+            | "start"
+            | "stop"
+            | "get"
+            | "set"
+            | "from"
+            | "into"
+            | "drop"
+            | "clone"
+            | "fmt"
+            | "eq"
+            | "hash"
+            | "cmp"
+            | "partial_cmp"
+            | "serialize"
+            | "deserialize"
+            | "encode"
+            | "decode"
+            | "constructor"
+            | "destructor"
+            | "finalize"
     ) || name.starts_with("test_")
-      || name.starts_with("Test")
-      || name.starts_with("_")
-      || name.starts_with("on")
-      || name.starts_with("handle")
+        || name.starts_with("Test")
+        || name.starts_with("_")
+        || name.starts_with("on")
+        || name.starts_with("handle")
 }
 
 /// Truncate a string to a maximum length
@@ -36,51 +60,74 @@ pub fn is_commented_out_code(line: &str) -> bool {
     } else {
         return false;
     };
-    
+
     if rest.len() < 5 {
         return false;
     }
-    
-    if rest.starts_with("TODO") || rest.starts_with("FIXME") || rest.starts_with("NOTE")
-        || rest.starts_with("HACK") || rest.starts_with("XXX") || rest.starts_with("WARN")
-        || rest.starts_with("@") || rest.starts_with("*") || rest.starts_with("-")
-        || rest.chars().next().map(|c| c.is_uppercase()).unwrap_or(false) && !rest.contains('(')
+
+    if rest.starts_with("TODO")
+        || rest.starts_with("FIXME")
+        || rest.starts_with("NOTE")
+        || rest.starts_with("HACK")
+        || rest.starts_with("XXX")
+        || rest.starts_with("WARN")
+        || rest.starts_with("@")
+        || rest.starts_with("*")
+        || rest.starts_with("-")
+        || rest
+            .chars()
+            .next()
+            .map(|c| c.is_uppercase())
+            .unwrap_or(false)
+            && !rest.contains('(')
     {
         return false;
     }
-    
+
     let code_indicators = [
         (";", true),
-        ("fn ", false), ("def ", false), ("function ", false),
-        ("class ", false), ("struct ", false),
-        ("let ", true), ("const ", true), ("var ", true),
-        ("if ", false), ("for ", false), ("while ", false),
+        ("fn ", false),
+        ("def ", false),
+        ("function ", false),
+        ("class ", false),
+        ("struct ", false),
+        ("let ", true),
+        ("const ", true),
+        ("var ", true),
+        ("if ", false),
+        ("for ", false),
+        ("while ", false),
         ("return ", false),
     ];
-    
+
     for (indicator, requires_semicolon) in &code_indicators {
         if rest.contains(indicator) {
             if *requires_semicolon && rest.ends_with(';') {
                 return true;
             } else if !requires_semicolon {
-                if rest.contains('{') || rest.contains('}') || rest.ends_with(';') || rest.ends_with(':') || rest.contains('(') {
+                if rest.contains('{')
+                    || rest.contains('}')
+                    || rest.ends_with(';')
+                    || rest.ends_with(':')
+                    || rest.contains('(')
+                {
                     return true;
                 }
             }
         }
     }
-    
+
     if rest.contains(" = ") && rest.ends_with(';') && !rest.contains("//") {
         return true;
     }
-    
+
     false
 }
 
 /// Extract import name from an import statement
 pub fn extract_import_name(line: &str) -> Option<String> {
     let line = line.trim_end_matches(';').trim();
-    
+
     if line.starts_with("use ") {
         let path = line.trim_start_matches("use ").trim();
         if let Some(last) = path.split("::").last() {
@@ -102,7 +149,7 @@ pub fn extract_import_name(line: &str) -> Option<String> {
             }
         }
     }
-    
+
     None
 }
 
@@ -137,8 +184,14 @@ mod tests {
 
     #[test]
     fn test_extract_import_name() {
-        assert_eq!(extract_import_name("use std::io::Write;"), Some("Write".to_string()));
+        assert_eq!(
+            extract_import_name("use std::io::Write;"),
+            Some("Write".to_string())
+        );
         assert_eq!(extract_import_name("import os"), Some("os".to_string()));
-        assert_eq!(extract_import_name("from os import path"), Some("path".to_string()));
+        assert_eq!(
+            extract_import_name("from os import path"),
+            Some("path".to_string())
+        );
     }
 }

@@ -10,11 +10,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 /// Extract code blocks from content with variable-length windows
-pub fn extract_code_blocks(
-    file: &str,
-    content: &str,
-    config: &DuplicateConfig,
-) -> Vec<CodeBlock> {
+pub fn extract_code_blocks(file: &str, content: &str, config: &DuplicateConfig) -> Vec<CodeBlock> {
     let lines: Vec<&str> = content.lines().collect();
     let mut blocks = Vec::new();
 
@@ -32,7 +28,7 @@ pub fn extract_code_blocks(
             }
 
             let content = block_lines.join("\n");
-            
+
             // Skip if too many comments
             if is_mostly_comments(&content) {
                 continue;
@@ -40,7 +36,7 @@ pub fn extract_code_blocks(
 
             let normalized = normalize_code(&content);
             let normalized_with_vars = normalize_with_variables(&content);
-            
+
             // Tokenize
             let tokens: Vec<String> = normalized
                 .split_whitespace()
@@ -98,10 +94,11 @@ pub fn should_process_file(file_path: &str, config: &DuplicateConfig) -> bool {
     // Exclude generated files
     if config.exclude_generated {
         let lower = file_path.to_lowercase();
-        if lower.contains("generated") 
-            || lower.contains(".gen.") 
-            || lower.contains("_pb.") 
-            || lower.contains(".pb.") {
+        if lower.contains("generated")
+            || lower.contains(".gen.")
+            || lower.contains("_pb.")
+            || lower.contains(".pb.")
+        {
             return false;
         }
     }
@@ -127,7 +124,10 @@ pub fn find_duplicates_with_index(
 
     for (idx, block) in blocks.iter().enumerate() {
         hash_index.entry(block.hash).or_default().push(idx);
-        norm_hash_index.entry(block.normalized_hash).or_default().push(idx);
+        norm_hash_index
+            .entry(block.normalized_hash)
+            .or_default()
+            .push(idx);
     }
 
     // Find candidates using hash index
@@ -158,7 +158,10 @@ pub fn find_duplicates_with_index(
                 if config.detect_type2 {
                     if let Some(candidates) = norm_hash_index.get(&block1.normalized_hash) {
                         for &j in candidates {
-                            if j > i && blocks[j].file != block1.file && blocks[j].hash != block1.hash {
+                            if j > i
+                                && blocks[j].file != block1.file
+                                && blocks[j].hash != block1.hash
+                            {
                                 let metrics = calculate_similarity(block1, &blocks[j]);
                                 if metrics.overall_similarity >= config.similarity_threshold {
                                     local_dups.push(create_duplicate(block1, &blocks[j], metrics));
@@ -175,9 +178,11 @@ pub fn find_duplicates_with_index(
                         if block2.file == block1.file {
                             continue;
                         }
-                        
+
                         // Skip if already found via hash
-                        if block2.hash == block1.hash || block2.normalized_hash == block1.normalized_hash {
+                        if block2.hash == block1.hash
+                            || block2.normalized_hash == block1.normalized_hash
+                        {
                             continue;
                         }
 
@@ -195,10 +200,10 @@ pub fn find_duplicates_with_index(
         // Sequential processing
         for i in 0..blocks.len() {
             let block1 = &blocks[i];
-            
+
             for j in (i + 1)..blocks.len() {
                 let block2 = &blocks[j];
-                
+
                 if block2.file == block1.file {
                     continue;
                 }
@@ -258,7 +263,7 @@ pub fn find_duplicates(
     config: DuplicateConfig,
 ) -> Result<Vec<EnhancedDuplicateBlock>, Box<dyn std::error::Error>> {
     let files = list_files(path, extensions, exclude)?;
-    
+
     // Extract blocks from all files
     let all_blocks: Vec<CodeBlock> = if config.use_parallel {
         files

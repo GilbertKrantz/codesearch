@@ -2,7 +2,7 @@
 //!
 //! Analyzes function call relationships in code.
 
-use crate::parser::{get_parser_for_extension, CodeParser};
+use crate::parser::get_parser_for_extension;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -43,7 +43,13 @@ impl CallGraph {
         self.nodes.insert(node.function_name.clone(), node);
     }
 
-    pub fn add_edge(&mut self, caller: String, callee: String, call_site_line: usize, is_direct: bool) {
+    pub fn add_edge(
+        &mut self,
+        caller: String,
+        callee: String,
+        call_site_line: usize,
+        is_direct: bool,
+    ) {
         self.edges.push(CallEdge {
             caller,
             callee,
@@ -120,7 +126,13 @@ impl CallGraph {
         max_depth
     }
 
-    fn calculate_depth_recursive(&self, function: &str, depth: usize, visited: &mut HashSet<String>, max_depth: &mut usize) {
+    fn calculate_depth_recursive(
+        &self,
+        function: &str,
+        depth: usize,
+        visited: &mut HashSet<String>,
+        max_depth: &mut usize,
+    ) {
         if visited.contains(function) {
             return;
         }
@@ -139,9 +151,9 @@ impl CallGraph {
         let mut chains = Vec::new();
         let mut current_path = vec![from.to_string()];
         let mut visited = HashSet::new();
-        
+
         self.find_chains_recursive(from, to, &mut current_path, &mut visited, &mut chains);
-        
+
         chains
     }
 
@@ -196,8 +208,15 @@ impl CallGraph {
         dot.push_str("\n");
 
         for edge in &self.edges {
-            let style = if edge.is_direct { "" } else { " [style=dashed]" };
-            dot.push_str(&format!("  \"{}\" -> \"{}\"{};\n", edge.caller, edge.callee, style));
+            let style = if edge.is_direct {
+                ""
+            } else {
+                " [style=dashed]"
+            };
+            dot.push_str(&format!(
+                "  \"{}\" -> \"{}\"{};\n",
+                edge.caller, edge.callee, style
+            ));
         }
 
         dot.push_str("}\n");
@@ -305,15 +324,15 @@ pub fn build_call_graph(
             if let Some(parser) = get_parser_for_extension(ext) {
                 if let Ok(analysis) = parser.parse_content(&content) {
                     for func in &analysis.functions {
-                        current_function = Some(func.name.clone());
-                        
                         for (line_num, line) in content.lines().enumerate() {
                             if line_num + 1 >= func.line {
                                 for cap in func_call_pattern.captures_iter(line) {
                                     if let Some(callee_match) = cap.get(1) {
                                         let callee = callee_match.as_str().to_string();
-                                        
-                                        if function_definitions.contains_key(&callee) && callee != func.name {
+
+                                        if function_definitions.contains_key(&callee)
+                                            && callee != func.name
+                                        {
                                             graph.add_edge(
                                                 func.name.clone(),
                                                 callee,
@@ -343,14 +362,9 @@ pub fn build_call_graph(
                 for cap in func_call_pattern.captures_iter(line) {
                     if let Some(callee_match) = cap.get(1) {
                         let callee = callee_match.as_str().to_string();
-                        
+
                         if function_definitions.contains_key(&callee) && callee != *caller {
-                            graph.add_edge(
-                                caller.clone(),
-                                callee,
-                                line_num + 1,
-                                true,
-                            );
+                            graph.add_edge(caller.clone(), callee, line_num + 1, true);
                         }
                     }
                 }
@@ -397,7 +411,7 @@ mod tests {
     #[test]
     fn test_get_callees() {
         let mut graph = CallGraph::new();
-        
+
         graph.add_node(CallNode {
             function_name: "main".to_string(),
             file_path: "test.rs".to_string(),
@@ -405,7 +419,7 @@ mod tests {
             is_recursive: false,
             call_count: 0,
         });
-        
+
         graph.add_node(CallNode {
             function_name: "helper".to_string(),
             file_path: "test.rs".to_string(),
@@ -413,9 +427,9 @@ mod tests {
             is_recursive: false,
             call_count: 0,
         });
-        
+
         graph.add_edge("main".to_string(), "helper".to_string(), 2, true);
-        
+
         let callees = graph.get_callees("main");
         assert_eq!(callees.len(), 1);
         assert_eq!(callees[0], "helper");
@@ -424,7 +438,7 @@ mod tests {
     #[test]
     fn test_find_dead_functions() {
         let mut graph = CallGraph::new();
-        
+
         graph.add_node(CallNode {
             function_name: "main".to_string(),
             file_path: "test.rs".to_string(),
@@ -432,7 +446,7 @@ mod tests {
             is_recursive: false,
             call_count: 0,
         });
-        
+
         graph.add_node(CallNode {
             function_name: "unused".to_string(),
             file_path: "test.rs".to_string(),
@@ -440,7 +454,7 @@ mod tests {
             is_recursive: false,
             call_count: 0,
         });
-        
+
         let dead = graph.find_dead_functions();
         assert!(dead.contains(&"unused".to_string()));
     }

@@ -5,17 +5,16 @@
 use crate::ast::{AstAnalysis, ClassInfo, FunctionInfo, ImportInfo, VariableInfo};
 use crate::parser::error::ParseError;
 use crate::parser::token::{Token, TokenKind};
-use crate::parser::traits::CodeParser;
 use crate::parser::tokenizer::Tokenizer;
+use crate::parser::traits::CodeParser;
 
 /// Rust keywords
 const RUST_KEYWORDS: &[&str] = &[
     "fn", "let", "mut", "pub", "priv", "struct", "enum", "impl", "trait", "type", "const",
-    "static", "async", "unsafe", "extern", "crate", "mod", "use", "where", "for", "while",
-    "loop", "match", "if", "else", "return", "break", "continue", "move", "ref", "dyn",
-    "union", "abstract", "become", "box", "do", "final", "macro", "override", "priv",
-    "typeof", "unsized", "virtual", "yield", "await", "try", "in",
-    "self", "Self", "super",
+    "static", "async", "unsafe", "extern", "crate", "mod", "use", "where", "for", "while", "loop",
+    "match", "if", "else", "return", "break", "continue", "move", "ref", "dyn", "union",
+    "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof", "unsized",
+    "virtual", "yield", "await", "try", "in", "self", "Self", "super",
 ];
 
 /// Native Rust parser
@@ -204,10 +203,7 @@ impl RustParser {
                 if tokens.get(pos).map(|t| t.text) == Some(":") {
                     pos += 1;
                     // Skip type
-                    while pos < tokens.len()
-                        && tokens[pos].text != ","
-                        && tokens[pos].text != ")"
-                    {
+                    while pos < tokens.len() && tokens[pos].text != "," && tokens[pos].text != ")" {
                         pos += 1;
                     }
                 }
@@ -244,7 +240,11 @@ impl RustParser {
             }
 
             // Add space in certain cases
-            let prev_token = if pos > start { tokens.get(pos - 1) } else { None };
+            let prev_token = if pos > start {
+                tokens.get(pos - 1)
+            } else {
+                None
+            };
             let needs_space = if let Some(prev) = prev_token {
                 // Add space after comma
                 if prev.text == "," {
@@ -252,8 +252,14 @@ impl RustParser {
                 }
                 // Add space between identifiers/keywords, but not before delimiters
                 else {
-                    let prev_is_delim = matches!(prev.text, "<" | ">" | "[" | "]" | "(" | ")" | "," | ";" | ":" | ".");
-                    let curr_is_delim = matches!(tokens[pos].text, "<" | ">" | "[" | "]" | "(" | ")" | "," | ";" | ":" | ".");
+                    let prev_is_delim = matches!(
+                        prev.text,
+                        "<" | ">" | "[" | "]" | "(" | ")" | "," | ";" | ":" | "."
+                    );
+                    let curr_is_delim = matches!(
+                        tokens[pos].text,
+                        "<" | ">" | "[" | "]" | "(" | ")" | "," | ";" | ":" | "."
+                    );
                     !prev_is_delim && !curr_is_delim
                 }
             } else {
@@ -300,7 +306,11 @@ impl RustParser {
     }
 
     /// Parse struct fields
-    fn parse_struct_fields(&self, tokens: &[Token], start: usize) -> Option<(Vec<String>, Vec<String>)> {
+    fn parse_struct_fields(
+        &self,
+        tokens: &[Token],
+        start: usize,
+    ) -> Option<(Vec<String>, Vec<String>)> {
         let mut fields = Vec::new();
         let mut methods = Vec::new();
         let mut pos = start;
@@ -523,7 +533,10 @@ mod tests {
         assert_eq!(functions[0].name, "fetch_data");
         assert!(functions[0].is_public);
         assert!(functions[0].is_async);
-        assert_eq!(functions[0].return_type, Some("Result<Data, Error>".to_string()));
+        assert_eq!(
+            functions[0].return_type,
+            Some("Result<Data, Error>".to_string())
+        );
     }
 
     #[test]

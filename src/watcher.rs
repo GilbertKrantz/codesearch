@@ -5,8 +5,8 @@
 use crate::index::CodeIndex;
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{channel, Receiver};
 use std::sync::Arc;
+use std::sync::mpsc::{Receiver, channel};
 use std::time::Duration;
 
 pub struct FileWatcher {
@@ -17,14 +17,14 @@ pub struct FileWatcher {
 impl FileWatcher {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let (tx, rx) = channel();
-        
+
         let watcher = RecommendedWatcher::new(
             move |res| {
                 let _ = tx.send(res);
             },
             Config::default().with_poll_interval(Duration::from_secs(2)),
         )?;
-        
+
         Ok(Self {
             watcher,
             receiver: rx,
@@ -78,14 +78,14 @@ impl FileWatcher {
         if !path.is_file() {
             return false;
         }
-        
+
         if let Some(exts) = extensions {
             if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
                 return exts.iter().any(|e| e == ext);
             }
             return false;
         }
-        
+
         true
     }
 }
@@ -97,11 +97,11 @@ pub fn start_watching(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut watcher = FileWatcher::new()?;
     watcher.watch(&path)?;
-    
+
     println!("Watching {} for changes...", path.display());
-    
+
     watcher.process_events(index, extensions)?;
-    
+
     Ok(())
 }
 
@@ -109,7 +109,6 @@ pub fn start_watching(
 mod tests {
     use super::*;
     use std::fs;
-    use std::io::Write;
     use tempfile::tempdir;
 
     #[test]
@@ -122,17 +121,17 @@ mod tests {
     fn test_should_index() {
         let watcher = FileWatcher::new().unwrap();
         let extensions = Some(vec!["rs".to_string(), "py".to_string()]);
-        
+
         let temp_dir = tempdir().unwrap();
-        
+
         let rs_path = temp_dir.path().join("test.rs");
         fs::File::create(&rs_path).unwrap();
         assert!(watcher.should_index(&rs_path, &extensions));
-        
+
         let py_path = temp_dir.path().join("test.py");
         fs::File::create(&py_path).unwrap();
         assert!(watcher.should_index(&py_path, &extensions));
-        
+
         let txt_path = temp_dir.path().join("test.txt");
         fs::File::create(&txt_path).unwrap();
         assert!(!watcher.should_index(&txt_path, &extensions));

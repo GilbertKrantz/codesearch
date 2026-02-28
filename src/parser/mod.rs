@@ -10,20 +10,20 @@ pub mod tokenizer;
 pub mod traits;
 pub mod utils;
 
-pub mod rust;
-pub mod python;
-pub mod javascript;
 pub mod go;
 pub mod java;
+pub mod javascript;
+pub mod python;
+pub mod rust;
 
 pub use error::ParseError;
-pub use token::{Token, TokenKind};
-pub use traits::{CodeParser, ControlFlowParser, ScopeParser};
-pub use rust::RustParser;
-pub use python::PythonParser;
-pub use javascript::JavaScriptParser;
 pub use go::GoParser;
 pub use java::JavaParser;
+pub use javascript::JavaScriptParser;
+pub use python::PythonParser;
+pub use rust::RustParser;
+pub use token::{Token, TokenKind};
+pub use traits::{CodeParser, ControlFlowParser, ScopeParser};
 
 pub use utils::{get_file_extension, read_file_content};
 

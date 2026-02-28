@@ -6,48 +6,48 @@ use std::collections::HashMap;
 /// Normalize code for comparison
 pub fn normalize_code(code: &str) -> String {
     let mut normalized = code.to_string();
-    
+
     // 1. Remove single-line comments
     normalized = remove_single_line_comments(&normalized);
-    
+
     // 2. Remove multi-line comments
     normalized = remove_multi_line_comments(&normalized);
-    
+
     // 3. Normalize whitespace
     normalized = normalize_whitespace(&normalized);
-    
+
     // 4. Remove empty lines
     normalized = normalized
         .lines()
         .filter(|line| !line.trim().is_empty())
         .collect::<Vec<_>>()
         .join("\n");
-    
+
     normalized
 }
 
 /// Advanced normalization with variable renaming
 pub fn normalize_with_variables(code: &str) -> String {
     let mut normalized = normalize_code(code);
-    
+
     // Replace variable names with placeholders
     normalized = rename_variables(&normalized);
-    
+
     // Normalize string literals
     normalized = normalize_strings(&normalized);
-    
+
     // Normalize numeric literals
     normalized = normalize_numbers(&normalized);
-    
+
     normalized
 }
 
 fn remove_single_line_comments(code: &str) -> String {
     let patterns = [
-        r"//.*$",           // C-style
+        r"//.*$",             // C-style
         r"#(?![!\[])[^\n]*$", // Python/Shell (but not #! or #[)
     ];
-    
+
     let mut result = code.to_string();
     for pattern in &patterns {
         if let Ok(re) = Regex::new(&format!("(?m){}", pattern)) {
@@ -59,11 +59,11 @@ fn remove_single_line_comments(code: &str) -> String {
 
 fn remove_multi_line_comments(code: &str) -> String {
     let patterns = [
-        r"/\*[\s\S]*?\*/",  // C-style
+        r"/\*[\s\S]*?\*/",   // C-style
         r#"'''[\s\S]*?'''"#, // Python
         r#""""[\s\S]*?""""#, // Python
     ];
-    
+
     let mut result = code.to_string();
     for pattern in &patterns {
         if let Ok(re) = Regex::new(pattern) {
@@ -77,7 +77,7 @@ fn normalize_whitespace(code: &str) -> String {
     // Replace multiple spaces with single space
     let re = Regex::new(r"[ \t]+").unwrap();
     let result = re.replace_all(code, " ");
-    
+
     // Trim each line
     result
         .lines()
@@ -91,34 +91,68 @@ fn rename_variables(code: &str) -> String {
     let identifier_re = Regex::new(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\b").unwrap();
     let mut var_map: HashMap<String, String> = HashMap::new();
     let mut counter = 1;
-    
+
     // Reserved keywords that shouldn't be renamed
     let keywords = [
-        "fn", "function", "def", "class", "struct", "enum", "trait",
-        "if", "else", "for", "while", "loop", "match", "switch",
-        "return", "break", "continue", "let", "const", "var",
-        "pub", "private", "public", "protected", "static",
-        "async", "await", "yield", "import", "from", "use",
-        "true", "false", "null", "nil", "None", "Some",
+        "fn",
+        "function",
+        "def",
+        "class",
+        "struct",
+        "enum",
+        "trait",
+        "if",
+        "else",
+        "for",
+        "while",
+        "loop",
+        "match",
+        "switch",
+        "return",
+        "break",
+        "continue",
+        "let",
+        "const",
+        "var",
+        "pub",
+        "private",
+        "public",
+        "protected",
+        "static",
+        "async",
+        "await",
+        "yield",
+        "import",
+        "from",
+        "use",
+        "true",
+        "false",
+        "null",
+        "nil",
+        "None",
+        "Some",
     ];
-    
-    identifier_re.replace_all(code, |caps: &regex::Captures| {
-        let ident = caps.get(1).unwrap().as_str();
-        
-        // Don't rename keywords
-        if keywords.contains(&ident) {
-            return ident.to_string();
-        }
-        
-        // Get or create placeholder
-        var_map.entry(ident.to_string())
-            .or_insert_with(|| {
-                let placeholder = format!("v{}", counter);
-                counter += 1;
-                placeholder
-            })
-            .clone()
-    }).to_string()
+
+    identifier_re
+        .replace_all(code, |caps: &regex::Captures| {
+            let ident = caps.get(1).unwrap().as_str();
+
+            // Don't rename keywords
+            if keywords.contains(&ident) {
+                return ident.to_string();
+            }
+
+            // Get or create placeholder
+            var_map
+                .entry(ident.to_string())
+                .or_insert_with(|| {
+                    let placeholder = format!("v{}", counter);
+                    counter += 1;
+                    placeholder
+                })
+                .clone()
+        })
+        .to_string()
 }
 
 fn normalize_strings(code: &str) -> String {
@@ -137,7 +171,7 @@ fn normalize_numbers(code: &str) -> String {
 pub fn calculate_hash(code: &str) -> u64 {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
-    
+
     let mut hasher = DefaultHasher::new();
     code.hash(&mut hasher);
     hasher.finish()

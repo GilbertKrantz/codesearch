@@ -9,9 +9,9 @@ pub mod pure;
 pub mod semantic;
 pub mod utilities;
 
-pub use core::{search_code, list_files};
+pub use core::{list_files, search_code};
 pub use engine::DefaultSearchEngine;
-pub use fuzzy::{search_in_file_parallel, calculate_relevance_score};
+pub use fuzzy::{calculate_relevance_score, search_in_file_parallel};
 pub use semantic::enhance_query_semantically;
 pub use utilities::{compare_with_grep, print_results, print_search_stats};
 
@@ -24,8 +24,10 @@ mod tests {
     #[test]
     fn test_enhance_query_semantically() {
         let enhanced = enhance_query_semantically("function");
-        assert!(enhanced.contains("function") || enhanced.contains("def") || enhanced.contains("fn"));
-        
+        assert!(
+            enhanced.contains("function") || enhanced.contains("def") || enhanced.contains("fn")
+        );
+
         let enhanced = enhance_query_semantically("class");
         assert!(enhanced.contains("class") || enhanced.contains("struct"));
     }
@@ -133,7 +135,6 @@ mod tests {
     #[test]
     fn test_search_code_with_invalid_regex() {
         use std::fs;
-        use std::path::Path;
         use tempfile::tempdir;
 
         let dir = tempdir().unwrap();

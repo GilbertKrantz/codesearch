@@ -2,16 +2,18 @@
 //!
 //! Helper functions for language detection and information retrieval.
 
-use super::types::LanguageInfo;
 use super::definitions::get_supported_languages;
+use super::types::LanguageInfo;
 use std::path::Path;
 
 /// Get language info by file extension
 pub fn get_language_by_extension(ext: &str) -> Option<LanguageInfo> {
     let ext_lower = ext.to_lowercase();
-    get_supported_languages()
-        .into_iter()
-        .find(|lang| lang.extensions.iter().any(|e| e.to_lowercase() == ext_lower))
+    get_supported_languages().into_iter().find(|lang| {
+        lang.extensions
+            .iter()
+            .any(|e| e.to_lowercase() == ext_lower)
+    })
 }
 
 /// Get all supported file extensions

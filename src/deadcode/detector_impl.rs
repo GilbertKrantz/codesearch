@@ -1,8 +1,8 @@
 //! Dead code detection logic
 
 use super::detectors::{
-    detect_dead_code_patterns, detect_empty_functions, detect_todo_fixme,
-    detect_unreachable_code, detect_unused_variables,
+    detect_dead_code_patterns, detect_empty_functions, detect_todo_fixme, detect_unreachable_code,
+    detect_unused_variables,
 };
 use super::helpers::is_special_function;
 use super::types::DeadCodeItem;
@@ -83,9 +83,7 @@ pub fn find_dead_code(
         detect_todo_fixme(&file.path, &content, &mut dead_code_items);
     }
 
-    dead_code_items.sort_by(|a, b| {
-        a.file.cmp(&b.file).then(a.line_number.cmp(&b.line_number))
-    });
+    dead_code_items.sort_by(|a, b| a.file.cmp(&b.file).then(a.line_number.cmp(&b.line_number)));
 
     Ok(dead_code_items)
 }

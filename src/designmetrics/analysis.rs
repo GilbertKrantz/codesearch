@@ -2,8 +2,10 @@
 //!
 //! Main analysis functions for calculating design quality metrics.
 
+use super::extractors::{
+    count_abstract_elements, extract_classes_with_metrics, extract_dependencies,
+};
 use super::types::{DesignMetrics, ModuleMetrics};
-use super::extractors::{extract_dependencies, extract_classes_with_metrics, count_abstract_elements};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -50,13 +52,15 @@ pub fn analyze_design_metrics(
         .collect();
 
     for file in &files {
-        let module_name = file.file_stem()
+        let module_name = file
+            .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
             .to_string();
 
         let content = std::fs::read_to_string(file)?;
-        let mut module_metrics = ModuleMetrics::new(module_name.clone(), file.to_string_lossy().to_string());
+        let mut module_metrics =
+            ModuleMetrics::new(module_name.clone(), file.to_string_lossy().to_string());
 
         let dependencies = extract_dependencies(&content, file);
         module_metrics.efferent_coupling = dependencies.len();
@@ -76,7 +80,7 @@ pub fn analyze_design_metrics(
 
     for (module_name, module_metrics) in metrics.modules.iter_mut() {
         let mut dependents = Vec::new();
-        
+
         for (other_module, other_deps) in &module_dependencies {
             if other_module != module_name && other_deps.contains(module_name) {
                 dependents.push(other_module.clone());

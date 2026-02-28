@@ -11,7 +11,7 @@ pub fn count_classes(content: &str, ext: &str) -> usize {
         "go" => vec![r"type\s+\w+\s+struct"],
         _ => vec![],
     };
-    
+
     let mut count = 0;
     for pattern in patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
@@ -30,7 +30,7 @@ pub fn count_functions(content: &str, ext: &str) -> usize {
         "go" => vec![r"func\s+\w+"],
         _ => vec![],
     };
-    
+
     let mut count = 0;
     for pattern in patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
@@ -48,7 +48,7 @@ pub fn count_fields(content: &str, ext: &str) -> usize {
         "js" | "ts" => vec![r"this\.\w+\s*="],
         _ => vec![],
     };
-    
+
     let mut count = 0;
     for pattern in patterns {
         if let Ok(re) = regex::Regex::new(pattern) {
@@ -61,7 +61,7 @@ pub fn count_fields(content: &str, ext: &str) -> usize {
 pub fn calculate_max_nesting(content: &str) -> usize {
     let mut max_depth = 0;
     let mut current_depth = 0;
-    
+
     for ch in content.chars() {
         match ch {
             '{' | '(' | '[' => {
@@ -76,6 +76,6 @@ pub fn calculate_max_nesting(content: &str) -> usize {
             _ => {}
         }
     }
-    
+
     max_depth
 }

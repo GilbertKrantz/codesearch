@@ -85,20 +85,26 @@ impl DesignMetrics {
         self.overall_stats.avg_instability = total_instability / module_count as f64;
         self.overall_stats.avg_cohesion = total_cohesion / module_count as f64;
 
-        let coupling_threshold = self.overall_stats.avg_afferent_coupling + self.overall_stats.avg_efferent_coupling;
-        self.overall_stats.highly_coupled_modules = self.modules
+        let coupling_threshold =
+            self.overall_stats.avg_afferent_coupling + self.overall_stats.avg_efferent_coupling;
+        self.overall_stats.highly_coupled_modules = self
+            .modules
             .iter()
-            .filter(|(_, m)| (m.afferent_coupling + m.efferent_coupling) as f64 > coupling_threshold * 1.5)
+            .filter(|(_, m)| {
+                (m.afferent_coupling + m.efferent_coupling) as f64 > coupling_threshold * 1.5
+            })
             .map(|(name, _)| name.clone())
             .collect();
 
-        self.overall_stats.unstable_modules = self.modules
+        self.overall_stats.unstable_modules = self
+            .modules
             .iter()
             .filter(|(_, m)| m.instability > 0.7)
             .map(|(name, _)| name.clone())
             .collect();
 
-        self.overall_stats.low_cohesion_modules = self.modules
+        self.overall_stats.low_cohesion_modules = self
+            .modules
             .iter()
             .filter(|(_, m)| m.cohesion < 0.5)
             .map(|(name, _)| name.clone())
@@ -190,8 +196,16 @@ impl ClassMetrics {
                 let method1 = &self.methods[i];
                 let method2 = &self.methods[j];
 
-                let fields1 = self.method_field_usage.get(method1).cloned().unwrap_or_default();
-                let fields2 = self.method_field_usage.get(method2).cloned().unwrap_or_default();
+                let fields1 = self
+                    .method_field_usage
+                    .get(method1)
+                    .cloned()
+                    .unwrap_or_default();
+                let fields2 = self
+                    .method_field_usage
+                    .get(method2)
+                    .cloned()
+                    .unwrap_or_default();
 
                 if fields1.intersection(&fields2).count() == 0 {
                     non_sharing_pairs += 1;

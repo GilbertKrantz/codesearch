@@ -11,7 +11,7 @@ use std::path::PathBuf;
 pub async fn search_code_tool(params: Parameters<SearchCodeParams>) -> Json<Vec<SearchResult>> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
+
     let options = SearchOptions {
         extensions: params.extensions,
         ignore_case: params.ignore_case.unwrap_or(false),
@@ -25,7 +25,7 @@ pub async fn search_code_tool(params: Parameters<SearchCodeParams>) -> Json<Vec<
         benchmark: false,
         vs_grep: false,
     };
-    
+
     Json(search_code(&params.query, &path_buf, &options).unwrap_or_default())
 }
 
@@ -33,25 +33,31 @@ pub async fn search_code_tool(params: Parameters<SearchCodeParams>) -> Json<Vec<
 pub async fn list_files_tool(params: Parameters<ListFilesParams>) -> Json<Vec<FileInfo>> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
-    Json(list_files(
-        &path_buf,
-        params.extensions.as_deref(),
-        params.exclude.as_deref(),
-    ).unwrap_or_default())
+
+    Json(
+        list_files(
+            &path_buf,
+            params.extensions.as_deref(),
+            params.exclude.as_deref(),
+        )
+        .unwrap_or_default(),
+    )
 }
 
 /// Analyze codebase metrics and statistics
-pub async fn analyze_codebase_tool(params: Parameters<AnalyzeCodebaseParams>) -> Json<serde_json::Value> {
+pub async fn analyze_codebase_tool(
+    params: Parameters<AnalyzeCodebaseParams>,
+) -> Json<serde_json::Value> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
+
     let files = list_files(
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
-    ).unwrap_or_default();
-    
+    )
+    .unwrap_or_default();
+
     if files.is_empty() {
         return Json(serde_json::json!({
             "message": "No files found to analyze",
@@ -63,16 +69,17 @@ pub async fn analyze_codebase_tool(params: Parameters<AnalyzeCodebaseParams>) ->
     let total_files = files.len();
     let total_lines: usize = files.iter().map(|f| f.lines).sum();
     let total_size: u64 = files.iter().map(|f| f.size).sum();
-    
+
     // File type breakdown
-    let mut ext_counts: std::collections::HashMap<String, (usize, usize, u64)> = std::collections::HashMap::new();
+    let mut ext_counts: std::collections::HashMap<String, (usize, usize, u64)> =
+        std::collections::HashMap::new();
     for file in &files {
         let ext = if let Some(ext) = std::path::Path::new(&file.path).extension() {
             ext.to_string_lossy().to_string()
         } else {
             "no extension".to_string()
         };
-        
+
         let entry = ext_counts.entry(ext).or_insert((0, 0, 0));
         entry.0 += 1;
         entry.1 += file.lines;
@@ -92,7 +99,7 @@ pub async fn analyze_codebase_tool(params: Parameters<AnalyzeCodebaseParams>) ->
     for (name, pattern) in patterns {
         if let Ok(regex) = regex::Regex::new(pattern) {
             let mut total_matches = 0;
-            
+
             for file in &files {
                 if let Ok(content) = std::fs::read_to_string(&file.path) {
                     for line in content.lines() {
@@ -109,13 +116,17 @@ pub async fn analyze_codebase_tool(params: Parameters<AnalyzeCodebaseParams>) ->
     // Largest files
     let mut file_vec = files.clone();
     file_vec.sort_by(|a, b| b.lines.cmp(&a.lines));
-    let largest_files: Vec<_> = file_vec.iter().take(5).map(|f| {
-        serde_json::json!({
-            "path": f.path,
-            "lines": f.lines,
-            "size": f.size
+    let largest_files: Vec<_> = file_vec
+        .iter()
+        .take(5)
+        .map(|f| {
+            serde_json::json!({
+                "path": f.path,
+                "lines": f.lines,
+                "size": f.size
+            })
         })
-    }).collect();
+        .collect();
 
     Json(serde_json::json!({
         "total_files": total_files,
@@ -135,28 +146,34 @@ pub async fn analyze_codebase_tool(params: Parameters<AnalyzeCodebaseParams>) ->
 }
 
 /// Detect code complexity issues
-pub async fn detect_complexity_tool(params: Parameters<ComplexityParams>) -> Json<serde_json::Value> {
+pub async fn detect_complexity_tool(
+    params: Parameters<ComplexityParams>,
+) -> Json<serde_json::Value> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
+
     let metrics = complexity::calculate_complexity(
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
-    ).unwrap_or_default();
-    
+    )
+    .unwrap_or_default();
+
     let mut filtered_metrics = metrics;
     if let Some(threshold) = params.threshold {
-        filtered_metrics.retain(|m| m.cyclomatic_complexity >= threshold || m.cognitive_complexity >= threshold);
+        filtered_metrics.retain(|m| {
+            m.cyclomatic_complexity >= threshold || m.cognitive_complexity >= threshold
+        });
     }
-    
+
     if params.sort.unwrap_or(false) {
         filtered_metrics.sort_by(|a, b| {
-            b.cyclomatic_complexity.cmp(&a.cyclomatic_complexity)
+            b.cyclomatic_complexity
+                .cmp(&a.cyclomatic_complexity)
                 .then(b.cognitive_complexity.cmp(&a.cognitive_complexity))
         });
     }
-    
+
     Json(serde_json::json!({
         "metrics": filtered_metrics,
         "total_files": filtered_metrics.len()
@@ -164,18 +181,21 @@ pub async fn detect_complexity_tool(params: Parameters<ComplexityParams>) -> Jso
 }
 
 /// Detect duplicate code blocks
-pub async fn detect_duplicates_tool(params: Parameters<DuplicatesParams>) -> Json<serde_json::Value> {
+pub async fn detect_duplicates_tool(
+    params: Parameters<DuplicatesParams>,
+) -> Json<serde_json::Value> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
+
     let duplicates = duplicates::find_duplicates(
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
         params.min_lines.unwrap_or(5),
         params.similarity.unwrap_or(0.9),
-    ).unwrap_or_default();
-    
+    )
+    .unwrap_or_default();
+
     Json(serde_json::json!({
         "duplicates": duplicates,
         "total_duplicates": duplicates.len()
@@ -186,13 +206,14 @@ pub async fn detect_duplicates_tool(params: Parameters<DuplicatesParams>) -> Jso
 pub async fn detect_deadcode_tool(params: Parameters<DeadcodeParams>) -> Json<serde_json::Value> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
+
     let dead_code = deadcode::find_dead_code(
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
-    ).unwrap_or_default();
-    
+    )
+    .unwrap_or_default();
+
     Json(serde_json::json!({
         "dead_code": dead_code,
         "total_items": dead_code.len()
@@ -203,13 +224,14 @@ pub async fn detect_deadcode_tool(params: Parameters<DeadcodeParams>) -> Json<se
 pub async fn detect_circular_tool(params: Parameters<CircularParams>) -> Json<serde_json::Value> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
+
     let cycles = circular::find_circular_calls(
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
-    ).unwrap_or_default();
-    
+    )
+    .unwrap_or_default();
+
     Json(serde_json::json!({
         "cycles": cycles.iter().map(|c| serde_json::json!({
             "chain": c.chain,
@@ -224,20 +246,21 @@ pub async fn find_symbol_tool(params: Parameters<FindSymbolParams>) -> Json<serd
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
     let find_type = find::FindType::from_str(params.find_type.as_deref().unwrap_or("all"));
-    
+
     let report = find::find_symbol(
         &params.symbol,
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
         find_type,
-    ).unwrap_or_else(|_| find::FindReport {
+    )
+    .unwrap_or_else(|_| find::FindReport {
         symbol: params.symbol.clone(),
         definitions: vec![],
         references: vec![],
         callers: vec![],
     });
-    
+
     Json(serde_json::json!({
         "symbol": report.symbol,
         "definitions": report.definitions,
@@ -250,12 +273,13 @@ pub async fn find_symbol_tool(params: Parameters<FindSymbolParams>) -> Json<serd
 pub async fn get_health_tool(params: Parameters<GetHealthParams>) -> Json<serde_json::Value> {
     let params = params.0;
     let path_buf = PathBuf::from(params.path.as_deref().unwrap_or("."));
-    
+
     let report = health::scan_health(
         &path_buf,
         params.extensions.as_deref(),
         params.exclude.as_deref(),
-    ).unwrap_or_else(|_| health::HealthReport {
+    )
+    .unwrap_or_else(|_| health::HealthReport {
         score: 0,
         dead_code_count: 0,
         duplicate_count: 0,
@@ -267,7 +291,7 @@ pub async fn get_health_tool(params: Parameters<GetHealthParams>) -> Json<serde_
             complexity_penalty: 0,
         },
     });
-    
+
     Json(serde_json::json!({
         "score": report.score,
         "dead_code_count": report.dead_code_count,

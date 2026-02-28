@@ -44,7 +44,14 @@ codesearch duplicates ./src
 
 ### **What Makes CodeSearch Different?**
 
-Unlike **Joern** (CPG graph DB, Scala queries, security research) or **CodeQL** (QL logic language, GitHub extractors, path queries), CodeSearch needs **no indexing or config**. It's grep-like search plus structure-aware find, health scans, and MCP for AI agents—all from the terminal, immediately. See [docs/CAPABILITY_REDESIGN.md](docs/CAPABILITY_REDESIGN.md) for a full comparison.
+Unlike **Joern** (CPG graph DB, Scala queries, security research) or **CodeQL** (QL logic language, GitHub extractors, path queries), CodeSearch needs **no indexing or config**—and beats them on time-to-result:
+
+- **Unified graph** (`codesearch graph unified`) — AST+CFG+DFG in one, like Joern's CPG but no DB
+- **Data-flow trace** (`codesearch flow <var>`) — path-style tracing without extractors
+- **Security scan** (`codesearch security`) — eval/exec/SQL patterns instantly
+- **First result** — sub-second vs. minutes of import/build
+
+See [docs/CAPABILITY_REDESIGN.md](docs/CAPABILITY_REDESIGN.md) for full comparison.
 
 | Feature | Benefit | Example |
 |---------|---------|---------|
@@ -202,9 +209,29 @@ codesearch callgraph ./src --format text
 #### Control Flow Analysis
 ```bash
 # Understand execution paths
-codesearch cfg ./src/auth.rs --format text
+codesearch graph cfg ./src/auth.rs --format text
 
 # Shows: Basic blocks, branches, loops, unreachable code
+```
+
+#### Unified Graph (CPG-style, no DB)
+```bash
+# AST + CFG + DFG in one—like Joern's CPG, instant
+codesearch graph unified ./src/main.rs
+
+# Output: Syntax edges, execution edges, data edges
+```
+
+#### Data-Flow Trace (path-query style)
+```bash
+# Trace variable flow—no extractors, no indexing
+codesearch flow input ./src --sink eval
+```
+
+#### Security Pattern Scan
+```bash
+# Instant security checks—eval, exec, SQL concat, etc.
+codesearch security ./src --extensions js,py,php
 ```
 
 ### 4. **Advanced Workflows**

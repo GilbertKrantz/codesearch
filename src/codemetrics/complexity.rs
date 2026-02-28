@@ -14,6 +14,7 @@ pub struct ComplexityMetrics {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(non_snake_case)] // Halstead notation: N1=total operators, N2=total operands
 pub struct HalsteadMetrics {
     pub n1: usize,
     pub n2: usize,

@@ -31,7 +31,7 @@ pub fn detect_dead_code(
     println!();
 
     let dead_code_items = find_dead_code(path, extensions, exclude)?;
-    
+
     if dead_code_items.is_empty() {
         println!("{}", "No files found to analyze.".dimmed());
         return Ok(());
@@ -82,12 +82,12 @@ fn print_dead_code_results(items: &[DeadCodeItem]) {
 
         println!();
         println!("{}", "Summary:".cyan().bold());
-        
+
         let mut type_counts: HashMap<String, usize> = HashMap::new();
         for item in items {
             *type_counts.entry(item.item_type.clone()).or_insert(0) += 1;
         }
-        
+
         for (item_type, count) in &type_counts {
             println!("   {} {}: {}", "•".dimmed(), item_type, count);
         }

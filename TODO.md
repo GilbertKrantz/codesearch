@@ -7,7 +7,7 @@
 - [x] Add interactive mode
 - [x] Add codebase analysis
 - [x] Add refactoring suggestions
-- [x] Implement MCP server support (rmcp 0.10 with 7 tools: search, list, analyze, complexity, duplicates, deadcode, circular)
+- [x] Implement MCP server support (rmcp 0.10 with 9 tools: search, list, analyze, complexity, duplicates, deadcode, circular, find_symbol, get_health)
 - [x] Add comprehensive unit tests (80+ tests)
 - [x] Add integration tests (26 tests)
 - [x] Simplify CLI usage with defaults
@@ -84,11 +84,7 @@
 
 ## 🔄 In Progress
 
-- **Capability Redesign** (see docs/CAPABILITY_REDESIGN.md)
-  - Phase 1: health command, graph consolidation
-  - Phase 2: find <symbol> command
-  - Phase 3: health scoring, --fail-under
-  - Phase 4: MCP expansion (find_symbol, get_health)
+- None currently
 
 ## 📋 Planned
 
@@ -102,20 +98,20 @@
   - [x] Merge `metrics` into `analyze` (--metrics flag)
   - [x] Deprecate `remote`, `design-metrics`, `graph-all`, `metrics`
 
-- [ ] **Phase 2: Structural Find**
-  - [ ] Implement `codesearch find <symbol>` (definition, references, callers)
-  - [ ] Add `--type definition|callers|references`
-  - [ ] JSON output for piping
+- [x] **Phase 2: Structural Find** ✅
+  - [x] Implement `codesearch find <symbol>` (definition, references, callers)
+  - [x] Add `--type definition|callers|references`
+  - [x] JSON output for piping
 
 - [x] **Phase 3: Health Scoring** ✅
   - [x] Health score formula (0-100)
   - [x] `--fail-under` for CI gates
   - [x] Structured JSON output
 
-- [ ] **Phase 4: MCP Expansion**
-  - [ ] Add `find_symbol` MCP tool
-  - [ ] Add `get_health` MCP tool
-  - [ ] Update README: MCP first-class
+- [x] **Phase 4: MCP Expansion** ✅
+  - [x] Add `find_symbol` MCP tool
+  - [x] Add `get_health` MCP tool
+  - [x] Update README: MCP first-class
 
 ### Maintainability Improvements (High Priority)
 - [x] **Extract trait abstractions for core components** ✅ (Jan 2026)

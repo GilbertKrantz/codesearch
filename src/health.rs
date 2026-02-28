@@ -58,13 +58,7 @@ pub fn scan_health(
     let dead_items = find_dead_code(path, extensions, exclude)?;
     let dead_code_count = dead_items.len();
 
-    let duplicates = find_duplicates(
-        path,
-        extensions,
-        exclude,
-        3,
-        0.85,
-    )?;
+    let duplicates = find_duplicates(path, extensions, exclude, 3, 0.85)?;
     let duplicate_count = duplicates.len();
 
     let mut complex_files_count = 0;
@@ -80,7 +74,9 @@ pub fn scan_health(
     let dup_penalty = (duplicate_count * 5).min(MAX_PENALTY_PER_CATEGORY as usize) as u8;
     let compl_penalty = (complex_files_count * 5).min(MAX_PENALTY_PER_CATEGORY as usize) as u8;
 
-    let total_penalty = dead_penalty.saturating_add(dup_penalty).saturating_add(compl_penalty);
+    let total_penalty = dead_penalty
+        .saturating_add(dup_penalty)
+        .saturating_add(compl_penalty);
     let score = 100u8.saturating_sub(total_penalty);
 
     Ok(HealthReport {
@@ -135,16 +131,9 @@ pub fn print_health_report(report: &HealthReport) {
         report.details.complexity_penalty
     );
     println!();
-    println!(
-        "{} {} files analyzed",
-        "•".dimmed(),
-        report.total_files
-    );
+    println!("{} {} files analyzed", "•".dimmed(), report.total_files);
     println!();
-    println!(
-        "{}",
-        "Run with --format json for machine output.".dimmed()
-    );
+    println!("{}", "Run with --format json for machine output.".dimmed());
 }
 
 #[cfg(test)]
@@ -163,11 +152,7 @@ mod tests {
     #[test]
     fn test_scan_health_with_code() {
         let dir = tempfile::tempdir().unwrap();
-        fs::write(
-            dir.path().join("test.rs"),
-            "fn main() { let x = 1; }",
-        )
-        .unwrap();
+        fs::write(dir.path().join("test.rs"), "fn main() { let x = 1; }").unwrap();
         let report = scan_health(dir.path(), Some(&["rs".to_string()]), None).unwrap();
         assert!(report.total_files >= 1);
     }

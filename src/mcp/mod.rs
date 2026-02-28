@@ -1,16 +1,16 @@
 //! MCP Server Module
 //!
 //! Provides MCP server functionality for code search operations.
-//! 
+//!
 //! This module is organized into sub-modules for better maintainability:
 //! - `schemas`: JSON Schema implementations for MCP types
 //! - `params`: Parameter structures for MCP tools
 //! - `tools`: Tool implementation functions
 
 #[cfg(feature = "mcp")]
-mod schemas;
-#[cfg(feature = "mcp")]
 mod params;
+#[cfg(feature = "mcp")]
+mod schemas;
 #[cfg(feature = "mcp")]
 mod tools;
 
@@ -19,11 +19,12 @@ pub use params::*;
 
 #[cfg(feature = "mcp")]
 use rmcp::{
-    tool, tool_router, ServerHandler,
+    ServerHandler,
     handler::server::tool::ToolRouter,
-    handler::server::wrapper::{Parameters, Json},
-    transport::io::stdio,
+    handler::server::wrapper::{Json, Parameters},
     service::serve_server,
+    tool, tool_router,
+    transport::io::stdio,
 };
 
 #[cfg(feature = "mcp")]
@@ -45,7 +46,9 @@ impl CodeSearchMcpService {
     }
 
     /// Search for text patterns in code files with advanced options
-    #[tool(description = "Search for text patterns in code files with advanced options like fuzzy matching, regex, and filtering")]
+    #[tool(
+        description = "Search for text patterns in code files with advanced options like fuzzy matching, regex, and filtering"
+    )]
     pub async fn search_code(
         &self,
         params: Parameters<SearchCodeParams>,
@@ -54,16 +57,17 @@ impl CodeSearchMcpService {
     }
 
     /// List all searchable files in a directory
-    #[tool(description = "List all searchable files in a directory with optional filtering by extensions")]
-    pub async fn list_files(
-        &self,
-        params: Parameters<ListFilesParams>,
-    ) -> Json<Vec<FileInfo>> {
+    #[tool(
+        description = "List all searchable files in a directory with optional filtering by extensions"
+    )]
+    pub async fn list_files(&self, params: Parameters<ListFilesParams>) -> Json<Vec<FileInfo>> {
         tools::list_files_tool(params).await
     }
 
     /// Analyze codebase metrics and statistics
-    #[tool(description = "Analyze codebase metrics and statistics. Returns JSON with file counts, line counts, and code patterns")]
+    #[tool(
+        description = "Analyze codebase metrics and statistics. Returns JSON with file counts, line counts, and code patterns"
+    )]
     pub async fn analyze_codebase(
         &self,
         params: Parameters<AnalyzeCodebaseParams>,
@@ -72,7 +76,9 @@ impl CodeSearchMcpService {
     }
 
     /// Detect code complexity issues
-    #[tool(description = "Detect code complexity issues. Returns files with high cyclomatic or cognitive complexity")]
+    #[tool(
+        description = "Detect code complexity issues. Returns files with high cyclomatic or cognitive complexity"
+    )]
     pub async fn detect_complexity(
         &self,
         params: Parameters<ComplexityParams>,
@@ -108,7 +114,9 @@ impl CodeSearchMcpService {
     }
 
     /// Find symbol: definition, references, callers (structure-aware)
-    #[tool(description = "Find symbol definition, references, and callers. Structure-aware search for functions, classes, and identifiers")]
+    #[tool(
+        description = "Find symbol definition, references, and callers. Structure-aware search for functions, classes, and identifiers"
+    )]
     pub async fn find_symbol(
         &self,
         params: Parameters<FindSymbolParams>,
@@ -117,11 +125,10 @@ impl CodeSearchMcpService {
     }
 
     /// Get codebase health score
-    #[tool(description = "Get codebase health score (0-100) from dead code, duplicates, and complexity. CI-friendly")]
-    pub async fn get_health(
-        &self,
-        params: Parameters<GetHealthParams>,
-    ) -> Json<serde_json::Value> {
+    #[tool(
+        description = "Get codebase health score (0-100) from dead code, duplicates, and complexity. CI-friendly"
+    )]
+    pub async fn get_health(&self, params: Parameters<GetHealthParams>) -> Json<serde_json::Value> {
         tools::get_health_tool(params).await
     }
 }

@@ -11,10 +11,22 @@ pub fn print_design_metrics(metrics: &DesignMetrics, detailed: bool) {
 
     println!("\n{}", "Overall Statistics:".green().bold());
     println!("  Total modules: {}", metrics.overall_stats.total_modules);
-    println!("  Average afferent coupling (Ca): {:.2}", metrics.overall_stats.avg_afferent_coupling);
-    println!("  Average efferent coupling (Ce): {:.2}", metrics.overall_stats.avg_efferent_coupling);
-    println!("  Average instability (I): {:.2}", metrics.overall_stats.avg_instability);
-    println!("  Average cohesion: {:.2}", metrics.overall_stats.avg_cohesion);
+    println!(
+        "  Average afferent coupling (Ca): {:.2}",
+        metrics.overall_stats.avg_afferent_coupling
+    );
+    println!(
+        "  Average efferent coupling (Ce): {:.2}",
+        metrics.overall_stats.avg_efferent_coupling
+    );
+    println!(
+        "  Average instability (I): {:.2}",
+        metrics.overall_stats.avg_instability
+    );
+    println!(
+        "  Average cohesion: {:.2}",
+        metrics.overall_stats.avg_cohesion
+    );
 
     if !metrics.overall_stats.highly_coupled_modules.is_empty() {
         println!("\n{}", "⚠️  Highly Coupled Modules:".yellow().bold());
@@ -69,10 +81,19 @@ pub fn print_design_metrics(metrics: &DesignMetrics, detailed: bool) {
         modules.sort_by(|a, b| b.afferent_coupling.cmp(&a.afferent_coupling));
 
         for module in modules {
-            println!("\n{}", format!("Module: {}", module.module_name).green().bold());
+            println!(
+                "\n{}",
+                format!("Module: {}", module.module_name).green().bold()
+            );
             println!("  File: {}", module.file_path);
-            println!("  Afferent Coupling (Ca): {} modules depend on this", module.afferent_coupling);
-            println!("  Efferent Coupling (Ce): {} dependencies", module.efferent_coupling);
+            println!(
+                "  Afferent Coupling (Ca): {} modules depend on this",
+                module.afferent_coupling
+            );
+            println!(
+                "  Efferent Coupling (Ce): {} dependencies",
+                module.efferent_coupling
+            );
             println!("  Instability (I): {:.2}", module.instability);
             println!("  Abstractness (A): {:.2}", module.abstractness);
             println!("  Distance from Main: {:.2}", module.distance_from_main);
@@ -89,8 +110,13 @@ pub fn print_design_metrics(metrics: &DesignMetrics, detailed: bool) {
             if !module.classes.is_empty() {
                 println!("  Classes:");
                 for class in &module.classes {
-                    println!("    - {} (LCOM: {:.2}, methods: {}, fields: {})",
-                        class.class_name, class.lcom, class.methods.len(), class.fields.len());
+                    println!(
+                        "    - {} (LCOM: {:.2}, methods: {}, fields: {})",
+                        class.class_name,
+                        class.lcom,
+                        class.methods.len(),
+                        class.fields.len()
+                    );
                 }
             }
         }

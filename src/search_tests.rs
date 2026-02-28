@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod edge_case_tests {
-    use crate::search::{search_code, list_files};
+    use crate::search::{list_files, search_code};
     use crate::types::SearchOptions;
     use std::path::PathBuf;
 
@@ -130,7 +130,11 @@ mod edge_case_tests {
     #[test]
     fn test_list_files_with_multiple_extensions() {
         let path = PathBuf::from("src");
-        let result = list_files(&path, Some(&[String::from("rs"), String::from("toml")]), None);
+        let result = list_files(
+            &path,
+            Some(&[String::from("rs"), String::from("toml")]),
+            None,
+        );
         assert!(result.is_ok());
     }
 
